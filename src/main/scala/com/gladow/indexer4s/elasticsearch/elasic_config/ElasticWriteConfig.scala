@@ -11,7 +11,7 @@ import scala.concurrent.duration.FiniteDuration
 
 case class ElasticWriteConfig(
   esTargetHosts: List[String],
-  esTargetPort: String,
+  esTargetPort: Int,
   esTargetCluster: String,
   esTargetIndexPrefix: String,
   esTargetType: String,
@@ -33,7 +33,7 @@ case class ElasticWriteConfig(
 object ElasticWriteConfig {
   def apply(
     esTargetHosts: List[String],
-    esTargetPort: String,
+    esTargetPort: Int,
     esTargetCluster: String,
     esTargetIndexPrefix: String,
     esTargetType: String

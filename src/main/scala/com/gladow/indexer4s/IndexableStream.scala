@@ -6,12 +6,12 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import cats.data.EitherT
 import cats.implicits._
-import com.gladow.indexer4s.IndexResults.{IndexError, RunResult, StageSucceeded, StageSuccess}
+import com.gladow.indexer4s.IndexResults.{IndexError, RunResult}
 import com.gladow.indexer4s.IndexableStream.IndexAction
 import com.gladow.indexer4s.elasticsearch.ElasticWriter
-import com.gladow.indexer4s.elasticsearch.index_ops.{EsOpsClient, IndexDeleter, SwitchAlias}
 import com.gladow.indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
-import io.circe.Encoder
+import com.gladow.indexer4s.elasticsearch.index_ops.{EsOpsClient, IndexDeletion, AliasSwitching}
+import com.sksamuel.elastic4s.Indexable
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -20,7 +20,7 @@ object IndexableStream {
 }
 
 class IndexableStream[A](source: Source[A, NotUsed])
-  (implicit system: ActorSystem, materializer: ActorMaterializer, encoder: Encoder[A]) {
+  (implicit system: ActorSystem, materializer: ActorMaterializer, indexable: Indexable[A]) {
 
   def runStream(esConf: ElasticWriteConfig)(implicit ex: ExecutionContext): IndexAction = {
     val esWriter = new ElasticWriter[A](esConf)
@@ -43,10 +43,10 @@ class IndexableStream[A](source: Source[A, NotUsed])
 class IndexableStreamWithSwitching(run: (ElasticWriteConfig, ExecutionContext) => IndexAction, alias: String) {
 
   def runStream(esConf: ElasticWriteConfig)(implicit ex: ExecutionContext): IndexAction = {
-    val switchAlias = new SwitchAlias(new EsOpsClient(esConf.client), alias, esConf.indexName)
+    val switchAlias = new AliasSwitching(new EsOpsClient(esConf.client))
     (for {
       indexResult <- EitherT(run(esConf, ex))
-      switchSuccess <- EitherT(switchAlias.switchAlias)
+      switchSuccess <- EitherT(switchAlias.switchAlias(alias, esConf.indexName))
         .leftMap(_.copy(succeededStages = indexResult.succeededStages.toList))
     } yield RunResult(indexResult.succeededStages :+ switchSuccess: _*))
       .value
@@ -59,7 +59,7 @@ class IndexableStreamWithSwitching(run: (ElasticWriteConfig, ExecutionContext) =
 class IndexableStreamWithDeletion(run: (ElasticWriteConfig, ExecutionContext) => IndexAction, keep: Int, aliasProtection: Boolean) {
 
   def runStream(esConf: ElasticWriteConfig)(implicit ex: ExecutionContext): IndexAction = {
-    val indexDelter = new IndexDeleter(new EsOpsClient(esConf.client))
+    val indexDelter = new IndexDeletion(new EsOpsClient(esConf.client))
     (for {
       indexResult <- EitherT(run(esConf, ex))
       deletionSuccess <- EitherT(indexDelter.deleteOldest(esConf.esTargetIndexPrefix, esConf.indexName ,keep, aliasProtection))

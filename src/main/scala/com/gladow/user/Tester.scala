@@ -4,6 +4,7 @@ import akka.stream.scaladsl.Source
 import com.gladow.indexer4s.ElasticIndexer4s
 import com.gladow.indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
 import io.circe.generic.auto._
+import com.sksamuel.elastic4s.circe.indexableWithCirce
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -14,13 +15,13 @@ object Tester extends App {
 
   case class Tester(i: Int, s: String)
 
-  val dummySource = Source.repeat("10").take(100000)
+  val dummySource = Source.repeat("10").take(10000)
     .mapAsync(2)(s => Future.successful(s.toInt))
     .map(i => Tester(i, "done"))
 
   val config = ElasticWriteConfig(
     List("localhost"),
-    "9300",
+    9300,
     "elasticsearch",
     "experimental",
     "docs",
@@ -28,7 +29,7 @@ object Tester extends App {
 
   ElasticIndexer4s
     .from(dummySource)
-    .switchAliasFrom(alias = "newAlias")
+//    .switchAliasFrom(alias = "newAlias")
     .deleteOldIndices(keep = 0, true)
     .runStream(config)
     .onComplete {

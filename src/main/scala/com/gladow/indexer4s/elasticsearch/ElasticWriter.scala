@@ -1,34 +1,33 @@
 package com.gladow.indexer4s.elasticsearch
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Flow, Keep, Sink}
+import akka.stream.scaladsl.Sink
 import com.gladow.indexer4s.IndexResults.{IndexError, StageSucceeded, StageSuccess}
 import com.gladow.indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
 import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.Indexable
 import com.sksamuel.elastic4s.bulk.BulkCompatibleDefinition
-import com.sksamuel.elastic4s.circe._
 import com.sksamuel.elastic4s.streams.ReactiveElastic._
 import com.sksamuel.elastic4s.streams.{BulkIndexingSubscriber, RequestBuilder}
-import io.circe.Encoder
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class ElasticWriter[EnrichedEntity](
-  esConf: ElasticWriteConfig)(implicit system: ActorSystem, encoder: Encoder[EnrichedEntity], ex: ExecutionContext) {
+class ElasticWriter[A](
+  esConf: ElasticWriteConfig)(implicit system: ActorSystem, indexable: Indexable[A], ex: ExecutionContext) {
 
   import esConf._
 
-  private implicit val builder = new RequestBuilder[EnrichedEntity] {
-    def request(post: EnrichedEntity): BulkCompatibleDefinition =
+  private implicit val builder = new RequestBuilder[A] {
+    def request(post: A): BulkCompatibleDefinition =
       indexInto(indexName / esTargetType) source post
   }
 
   //promise that is passed to the error and completion function of the elastic subscriber
   private val elasticFinishPromise: Promise[Unit] = Promise[Unit]()
 
-  private lazy val esSubscriber: BulkIndexingSubscriber[EnrichedEntity] = esConf.client.subscriber[EnrichedEntity](
+  private lazy val esSubscriber: BulkIndexingSubscriber[A] = esConf.client.subscriber[A](
     batchSize = esWriteBatchSize,
     completionFn = { () => Try(elasticFinishPromise.success(())); () },
     errorFn = { (t: Throwable) => Try(elasticFinishPromise.failure(t)); () },
@@ -36,7 +35,7 @@ class ElasticWriter[EnrichedEntity](
     maxAttempts = esWriteMaxAttempts
   )
 
-  val esSink: Sink[EnrichedEntity, Future[Unit]] =
+  val esSink: Sink[A, Future[Unit]] =
     Sink.fromSubscriber(esSubscriber)
       .mapMaterializedValue(_ => elasticFinishPromise.future)
 

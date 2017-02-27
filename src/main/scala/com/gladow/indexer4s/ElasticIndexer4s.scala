@@ -5,10 +5,10 @@ import akka.actor.ActorSystem
 import akka.stream.Supervision.Decider
 import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
-import io.circe.Encoder
+import com.sksamuel.elastic4s.Indexable
 
 class ElasticIndexer4s(implicit system: ActorSystem, materializer: ActorMaterializer) {
-  def from[A](source: Source[A, NotUsed])(implicit decoder: Encoder[A]): IndexableStream[A] = {
+  def from[A](source: Source[A, NotUsed])(implicit indexable: Indexable[A]): IndexableStream[A] = {
     new IndexableStream[A](source)
   }
 }
@@ -23,9 +23,9 @@ object ElasticIndexer4s {
     new ElasticIndexer4s()(system, ActorMaterializer(ActorMaterializerSettings(system).withSupervisionStrategy(decider)))
   }
 
-  def from[Entity](source: Source[Entity, NotUsed])(implicit decoder: Encoder[Entity]): IndexableStream[Entity] = {
+  def from[A](source: Source[A, NotUsed])(implicit indexable: Indexable[A]): IndexableStream[A] = {
     implicit val system = ActorSystem()
     implicit val materializer = ActorMaterializer()
-    new IndexableStream[Entity](source)
+    new IndexableStream[A](source)
   }
 }
