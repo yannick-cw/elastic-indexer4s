@@ -15,7 +15,9 @@ object Tester extends App {
 
   case class Tester(i: Int, s: String)
 
-  val dummySource = Source.repeat("10").take(10000)
+  val dummySource = Source
+    .repeat("10")
+    .take(10000)
     .mapAsync(2)(s => Future.successful(s.toInt))
     .map(i => Tester(i, "done"))
 
@@ -25,7 +27,8 @@ object Tester extends App {
     "elasticsearch",
     "experimental",
     "docs",
-    logWriteSpeedEvery = 10 seconds)
+    logWriteSpeedEvery = 10 seconds
+  )
 
   ElasticIndexer4s
     .from(dummySource)

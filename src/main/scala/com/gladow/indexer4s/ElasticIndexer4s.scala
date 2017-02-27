@@ -17,7 +17,7 @@ object ElasticIndexer4s {
   def apply(system: ActorSystem, materializer: ActorMaterializer): ElasticIndexer4s =
     new ElasticIndexer4s()(system, materializer)
 
-  def withDecider(decider: Decider) = {
+  def withDecider(decider: Decider): ElasticIndexer4s = {
     implicit val system = ActorSystem()
     implicit val materializer = ActorMaterializer()
     new ElasticIndexer4s()(system, ActorMaterializer(ActorMaterializerSettings(system).withSupervisionStrategy(decider)))
