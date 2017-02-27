@@ -3,7 +3,7 @@ package com.gladow.indexer4s
 import akka.NotUsed
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import com.gladow.indexer4s.IndexResults.{IndexError, StageSucceeded, StageSuccess}
+import com.gladow.indexer4s.Index_results.{IndexError, StageSucceeded, StageSuccess}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.{ExecutionContext, Future}

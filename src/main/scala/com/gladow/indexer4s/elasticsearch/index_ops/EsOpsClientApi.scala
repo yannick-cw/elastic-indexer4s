@@ -41,9 +41,8 @@ trait EsOpsClientApi {
 
 class EsOpsClient(client: TcpClient) extends EsOpsClientApi {
 
-  def delete(index: String): Future[DeleteIndexResponse] = client.execute(
-    deleteIndex(index)
-  )
+  def delete(index: String): Future[DeleteIndexResponse] =
+    client.execute(deleteIndex(index))
 
   //todo in terms of elastic4s
   def allIndicesWithAliasInfo: Future[List[IndexWithInfo]] = Future(
@@ -52,15 +51,17 @@ class EsOpsClient(client: TcpClient) extends EsOpsClientApi {
       .toList
   )
 
-  def removeAliasFromIndex(index: String, alias: String): Future[IndicesAliasesResponse] = client.execute(
-    removeAlias(alias) on index
-  )
+  def removeAliasFromIndex(index: String, alias: String): Future[IndicesAliasesResponse] =
+    client.execute(removeAlias(alias) on index)
 
-  def addAliasToIndex(index: String, alias: String): Future[IndicesAliasesResponse] = client.execute(
-    addAlias(alias) on index
-  )
+  def addAliasToIndex(index: String, alias: String): Future[IndicesAliasesResponse] =
+    client.execute(addAlias(alias) on index)
 
-  def sizeFor(index: String): Future[Long] = client.execute(
-      search(index) size 0
-  ).map(_.totalHits)
+  def sizeFor(index: String): Future[Long] =
+    client.execute(search(index) size 0)
+      .map(_.totalHits)
+}
+
+object EsOpsClient {
+  def apply(client: TcpClient): EsOpsClient = new EsOpsClient(client)
 }

@@ -2,7 +2,7 @@ package com.gladow.indexer4s.elasticsearch.index_ops
 
 import scala.concurrent.{ExecutionContext, Future}
 import cats.implicits._
-import com.gladow.indexer4s.IndexResults.{IndexError, StageSucceeded, StageSuccess}
+import com.gladow.indexer4s.Index_results.{IndexError, StageSucceeded, StageSuccess}
 
 class IndexDeletion(esClient: EsOpsClientApi)(implicit ec: ExecutionContext) {
 
@@ -19,4 +19,8 @@ class IndexDeletion(esClient: EsOpsClientApi)(implicit ec: ExecutionContext) {
       .filter(_.startsWith(indexPrefix))
     _ <- toDelete.traverse(delete)
   } yield Right(StageSuccess(s"Deleted indices: ${toDelete.mkString("[", ",", "]")}"))
+}
+
+object IndexDeletion {
+  def apply(esClient: EsOpsClientApi)(implicit ec: ExecutionContext): IndexDeletion = new IndexDeletion(esClient)
 }

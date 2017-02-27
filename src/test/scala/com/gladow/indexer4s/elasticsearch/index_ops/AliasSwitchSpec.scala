@@ -1,6 +1,6 @@
 package com.gladow.indexer4s.elasticsearch.index_ops
 
-import com.gladow.indexer4s.IndexResults.IndexError
+import com.gladow.indexer4s.Index_results.IndexError
 import com.gladow.indexer4s.specs.AsyncSpec
 
 import scala.concurrent.Future
@@ -12,8 +12,10 @@ class AliasSwitchSpec extends AsyncSpec {
   val oldIndexName = "oldIndex"
 
   def switchAlias(oldSize: Int, newSize: Int, failForNew: Boolean, expectSwitchFrom: String, oldIndicesWithAlias: IndexWithInfo*) =
-    new AliasSwitching(
+    AliasSwitching(
       esClient = testEsOpsClient(oldSize, newSize, failForNew, expectSwitchFrom, oldIndicesWithAlias),
+      minThreshold = 0.95,
+      maxThreshold = 1.25,
       waitForElastic = 0
     )
 

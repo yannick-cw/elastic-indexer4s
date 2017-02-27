@@ -29,7 +29,7 @@ object Tester extends App {
 
   ElasticIndexer4s
     .from(dummySource)
-//    .switchAliasFrom(alias = "newAlias")
+    .switchAliasFrom(alias = "newAlias")
     .deleteOldIndices(keep = 0, true)
     .runStream(config)
     .onComplete {

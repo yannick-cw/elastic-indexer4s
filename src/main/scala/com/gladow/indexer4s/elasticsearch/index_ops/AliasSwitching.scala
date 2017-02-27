@@ -2,12 +2,12 @@ package com.gladow.indexer4s.elasticsearch.index_ops
 
 import scala.concurrent.{ExecutionContext, Future}
 import cats.implicits._
-import com.gladow.indexer4s.IndexResults.{IndexError, StageSucceeded}
+import com.gladow.indexer4s.Index_results.{IndexError, StageSucceeded}
 
 import scala.util.Right
 import scala.util.control.NonFatal
 
-class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Int = 1000)
+class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Int, minThreshold: Double, maxThreshold: Double)
   (implicit ec: ExecutionContext) {
 
   import esClient._
@@ -34,7 +34,12 @@ class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Int = 1000)
       .map(_ => Right(AliasSwitched(s"Switched alias, new index size is ${(percentage * 100).toInt}% of old index")))
     else Future.successful(Left(IndexError(s"Switching failed, new index size is ${(percentage * 100).toInt}% of old index")))
 
-  private def thresholdCheck(percentage: Double): Boolean = 0.95 < percentage && percentage <= 1.25
+  private def thresholdCheck(percentage: Double): Boolean = minThreshold < percentage && percentage <= maxThreshold
+}
+
+object AliasSwitching {
+  def apply(esClient: EsOpsClientApi,  minThreshold: Double, maxThreshold: Double, waitForElastic: Int = 1000)
+    (implicit ec: ExecutionContext): AliasSwitching = new AliasSwitching(esClient, waitForElastic, minThreshold, maxThreshold)
 }
 
 case class AliasSwitched(override val msg: String) extends StageSucceeded

@@ -1,6 +1,6 @@
 package com.gladow.indexer4s.elasticsearch.index_ops
 
-import com.gladow.indexer4s.IndexResults.StageSucceeded
+import com.gladow.indexer4s.Index_results.StageSucceeded
 import com.gladow.indexer4s.specs.AsyncSpec
 
 import scala.concurrent.Future

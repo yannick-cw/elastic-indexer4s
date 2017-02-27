@@ -2,7 +2,7 @@ package com.gladow.indexer4s.elasticsearch
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Sink
-import com.gladow.indexer4s.IndexResults.{IndexError, StageSucceeded, StageSuccess}
+import com.gladow.indexer4s.Index_results.{IndexError, StageSucceeded, StageSuccess}
 import com.gladow.indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.Indexable
@@ -50,4 +50,10 @@ class ElasticWriter[A](
     recover { case NonFatal(t) =>
       Left(IndexError("Index creation failed with: " + t.getStackTrace.mkString("\n")))
     }
+}
+
+object ElasticWriter {
+  def apply[A](esConf: ElasticWriteConfig)
+    (implicit system: ActorSystem, indexable: Indexable[A], ex: ExecutionContext): ElasticWriter[A] =
+    new ElasticWriter[A](esConf)
 }
