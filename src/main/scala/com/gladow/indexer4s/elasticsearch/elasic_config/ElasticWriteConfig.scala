@@ -10,24 +10,24 @@ import scala.concurrent.duration._
 import scala.concurrent.duration.FiniteDuration
 
 case class ElasticWriteConfig(
-  esTargetHosts: List[String],
-  esTargetPort: Int,
-  esTargetCluster: String,
-  esTargetIndexPrefix: String,
-  esTargetType: String,
-  esTargetShards: Option[Int] = None,
-  esTargetReplicas: Option[Int] = None,
-  esTargetAnalyzers: List[AnalyzerDefinition] = List.empty,
-  esTargetMappings: List[MappingDefinition] = List.empty,
-  esWriteBatchSize: Int = 50,
-  esWriteConcurrentRequest: Int = 10,
-  esWriteMaxAttempts: Int = 5,
+  hosts: List[String],
+  port: Int,
+  cluster: String,
+  indexPrefix: String,
+  docType: String,
+  shards: Option[Int] = None,
+  replicas: Option[Int] = None,
+  analyzer: List[AnalyzerDefinition] = List.empty,
+  mappings: List[MappingDefinition] = List.empty,
+  writeBatchSize: Int = 50,
+  writeConcurrentRequest: Int = 10,
+  writeMaxAttempts: Int = 5,
   logWriteSpeedEvery: FiniteDuration = 1 minute
 ) {
-  val indexName = esTargetIndexPrefix + "_" + new DateTime().toString("yyyy-MM-dd't'HH:mm:ss")
-  private def settings = Settings.builder().put("cluster.name", esTargetCluster).build()
-  lazy val client: TcpClient = TcpClient.transport(settings, "elasticsearch://" + esTargetHosts
-    .map(host => s"$host:$esTargetPort").mkString(","))
+  val indexName = indexPrefix + "_" + new DateTime().toString("yyyy-MM-dd't'HH:mm:ss")
+  private def settings = Settings.builder().put("cluster.name", cluster).build()
+  lazy val client: TcpClient = TcpClient.transport(settings, "elasticsearch://" + hosts
+    .map(host => s"$host:$port").mkString(","))
 }
 
 object ElasticWriteConfig {

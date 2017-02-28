@@ -65,7 +65,7 @@ class IndexableStreamWithDeletion(run: (ElasticWriteConfig, ExecutionContext) =>
     IndexableStream.addRunStep(
       actionDone = run(esConf, ex),
       nextStep = IndexDeletion(EsOpsClient(esConf.client))
-        .deleteOldest(esConf.esTargetIndexPrefix, esConf.indexName ,keep, aliasProtection)
+        .deleteOldest(esConf.indexPrefix, esConf.indexName ,keep, aliasProtection)
     )
 }
 

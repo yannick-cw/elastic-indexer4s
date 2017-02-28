@@ -22,14 +22,14 @@ object Tester extends App {
     .map(i => Tester(i, "done"))
 
   val config = ElasticWriteConfig(
-    esTargetHosts = List("localhost"),
-    esTargetPort = 9300,
-    esTargetCluster = "elasticsearch",
-    esTargetIndexPrefix = "experimental",
-    esTargetType = "docs",
+    hosts = List("localhost"),
+    port = 9300,
+    cluster = "elasticsearch",
+    indexPrefix = "experimental",
+    docType = "docs",
     logWriteSpeedEvery = 10 seconds,
-    esTargetShards = Some(2),
-    esTargetReplicas = Some(2)
+    shards = Some(2),
+    replicas = Some(2)
   )
 
   ElasticIndexer4s
