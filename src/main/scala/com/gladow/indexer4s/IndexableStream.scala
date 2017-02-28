@@ -34,7 +34,7 @@ class IndexableStream[A](source: Source[A, NotUsed])
   def runStream(esConf: ElasticWriteConfig)(implicit ex: ExecutionContext): IndexAction = {
     val esWriter = ElasticWriter[A](esConf)
     IndexableStream.addRunStep(
-      actionDone = EitherT(esWriter.createIndexWithMapping).map(RunResult(_)).value,
+      actionDone = EitherT(esWriter.createNewIndex).map(RunResult(_)).value,
       nextStep = FullStream.run(source, esWriter.esSink, esConf.logWriteSpeedEvery)
     )
   }

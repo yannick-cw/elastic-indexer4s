@@ -27,7 +27,7 @@ class ElasticWriter[A](
   //promise that is passed to the error and completion function of the elastic subscriber
   private val elasticFinishPromise: Promise[Unit] = Promise[Unit]()
 
-  private lazy val esSubscriber: BulkIndexingSubscriber[A] = esConf.client.subscriber[A](
+  private lazy val esSubscriber: BulkIndexingSubscriber[A] = client.subscriber[A](
     batchSize = esWriteBatchSize,
     completionFn = { () => Try(elasticFinishPromise.success(())); () },
     errorFn = { (t: Throwable) => Try(elasticFinishPromise.failure(t)); () },
@@ -39,14 +39,18 @@ class ElasticWriter[A](
     Sink.fromSubscriber(esSubscriber)
       .mapMaterializedValue(_ => elasticFinishPromise.future)
 
-  private def tryIndexCreation: Future[Either[IndexError, StageSucceeded]] = esConf.client.execute(
-      createIndex(indexName).mappings(esTargetMappings).analysis(esTargetAnalyzers)/*.shards(indexShards).replicas(indexReplicas)*/
+  private def tryIndexCreation: Future[Either[IndexError, StageSucceeded]] = client.execute(
+    createIndex(indexName)
+      .mappings(esTargetMappings)
+      .analysis(esTargetAnalyzers)
+      .shards(esTargetShards)
+      .replicas(esTargetReplicas)
   ).map(res =>
-      if (res.isAcknowledged) Right(StageSuccess(s"Index $indexName was created"))
-      else Left(IndexError("Index creation was not acknowledged"))
+    if (res.isAcknowledged) Right(StageSuccess(s"Index $indexName was created"))
+    else Left(IndexError("Index creation was not acknowledged"))
   )
 
-  def createIndexWithMapping: Future[Either[IndexError, StageSucceeded]] = tryIndexCreation.
+  def createNewIndex: Future[Either[IndexError, StageSucceeded]] = tryIndexCreation.
     recover { case NonFatal(t) =>
       Left(IndexError("Index creation failed with: " + t.getStackTrace.mkString("\n")))
     }

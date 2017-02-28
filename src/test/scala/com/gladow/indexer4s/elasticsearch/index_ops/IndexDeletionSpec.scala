@@ -11,7 +11,7 @@ class IndexDeletionSpec extends AsyncSpec {
   "The IndexDeletion" should {
     "never delete the new index" in {
       val opsClient = testEsOpsClient(newIndex)
-      val deleter = new IndexDeletion(opsClient)
+      val deleter = IndexDeletion(opsClient)
 
       deleter.deleteOldest("new", "newIndex", 0, false).map { deletionResult =>
         deletionResult.right.value shouldBe a [StageSucceeded]
@@ -22,7 +22,7 @@ class IndexDeletionSpec extends AsyncSpec {
     "never delete an index with alias if protected" in {
       val protectedIndices = (1 to 10).map(i => IndexWithInfo(s"index$i", List(s"alias$i"), i))
       val opsClient = testEsOpsClient(newIndex +: protectedIndices:_*)
-      val deleter = new IndexDeletion(opsClient)
+      val deleter = IndexDeletion(opsClient)
 
       deleter.deleteOldest("inde", "index0", 0, true).map { deletionResult =>
         deletionResult.right.value shouldBe a [StageSucceeded]
@@ -34,7 +34,7 @@ class IndexDeletionSpec extends AsyncSpec {
       val indicesWithSamePrefix = (1 to 10).map(i => IndexWithInfo(s"index$i", List(s"alias"), i))
       val differentIndices = (1 to 10).map(i => IndexWithInfo(s"some$i", List(s"alias"), i))
       val opsClient = testEsOpsClient(newIndex +: (indicesWithSamePrefix ++ differentIndices):_*)
-      val deleter = new IndexDeletion(opsClient)
+      val deleter = IndexDeletion(opsClient)
 
       deleter.deleteOldest("inde", "index0", 0, false).map { deletionResult =>
         deletionResult.right.value shouldBe a [StageSucceeded]
@@ -45,7 +45,7 @@ class IndexDeletionSpec extends AsyncSpec {
     "delete the oldest indices first if more indices than defined to keep" in {
       val indices = scala.util.Random.shuffle((1 to 10).map(i => IndexWithInfo(s"index$i", List.empty, i)))
       val opsClient = testEsOpsClient(newIndex +: indices:_*)
-      val deleter = new IndexDeletion(opsClient)
+      val deleter = IndexDeletion(opsClient)
 
       deleter.deleteOldest("inde", "newIndex", 5, false).map { deletionResult =>
         deletionResult.right.value shouldBe a [StageSucceeded]

@@ -7,6 +7,8 @@ object Dependencies {
 
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
+  lazy val scalaCheck =  "org.scalacheck" % "scalacheck_2.12" % "1.13.4" % "test"
+
   lazy val elastic4s = Seq(
     "com.sksamuel.elastic4s" %% "elastic4s-core",
     "com.sksamuel.elastic4s" %% "elastic4s-streams",

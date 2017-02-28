@@ -25,8 +25,8 @@ case class ElasticWriteConfig(
   logWriteSpeedEvery: FiniteDuration = 1 minute
 ) {
   val indexName = esTargetIndexPrefix + "_" + new DateTime().toString("yyyy-MM-dd't'HH:mm:ss")
-  private val settings = Settings.builder().put("cluster.name", esTargetCluster).build()
-  val client: TcpClient = TcpClient.transport(settings, "elasticsearch://" + esTargetHosts
+  private def settings = Settings.builder().put("cluster.name", esTargetCluster).build()
+  lazy val client: TcpClient = TcpClient.transport(settings, "elasticsearch://" + esTargetHosts
     .map(host => s"$host:$esTargetPort").mkString(","))
 }
 

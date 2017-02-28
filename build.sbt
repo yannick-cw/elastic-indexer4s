@@ -10,8 +10,10 @@ lazy val root = (project in file(".")).
     name := "elastic-indexer4s",
     libraryDependencies ++= Seq(
       scalaTest,
+      scalaCheck,
       akkaStream,
-      cats
+      cats,
+      elastic4sTestkit
     ) ++ circe ++ elastic4s ++ log
   )
   .configs(IntegrationTest)
