@@ -30,11 +30,11 @@ class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Int, minThreshold
   } yield switchRes
 
   private def switchAliasBetweenIndices(percentage: Double, alias: String, newIndexName: String): Future[Either[IndexError, StageSucceeded]] =
-    if (thresholdCheck(percentage)) switchAliasToIndex(alias, newIndexName)
+    if (checkThreshold(percentage)) switchAliasToIndex(alias, newIndexName)
       .map(_ => Right(AliasSwitched(s"Switched alias, new index size is ${(percentage * 100).toInt}% of old index")))
     else Future.successful(Left(IndexError(s"Switching failed, new index size is ${(percentage * 100).toInt}% of old index")))
 
-  private def thresholdCheck(percentage: Double): Boolean = minThreshold < percentage && percentage <= maxThreshold
+  private def checkThreshold(percentage: Double): Boolean = minThreshold < percentage && percentage <= maxThreshold
 }
 
 object AliasSwitching {
