@@ -1,72 +1,80 @@
 package com.gladow.indexer4s
 
 import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import cats.data.EitherT
-import cats.implicits._
+import cats.free.Free
+import cats.free.Free.liftF
 import com.gladow.indexer4s.Index_results.{IndexError, RunResult, StageSucceeded}
-import com.gladow.indexer4s.IndexableStream.IndexAction
-import com.gladow.indexer4s.elasticsearch.ElasticWriter
-import com.gladow.indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
-import com.gladow.indexer4s.elasticsearch.index_ops.{AliasSwitching, EsOpsClient, IndexDeletion}
-import com.sksamuel.elastic4s.Indexable
-
-import scala.concurrent.{ExecutionContext, Future}
+import com.gladow.indexer4s.IndexableStream._
 
 object IndexableStream {
-  type IndexAction = Future[Either[IndexError, RunResult]]
+  sealed trait IndexAction[A]
+  type FreeIndexAction[A] = Free[IndexAction, A]
+  type Result = Either[IndexError, RunResult]
+  type StageResult = Either[IndexError, StageSucceeded]
 
-  def addRunStep(actionDone: => IndexAction, nextStep: => Future[Either[IndexError, StageSucceeded]])
-    (implicit ex: ExecutionContext): IndexAction =
-    (for {
-      indexResult <- EitherT(actionDone)
-      success <- EitherT(nextStep)
+  case object CreateIndex extends IndexAction[StageResult]
+  case class IndexSource[A](source: Source[A, NotUsed]) extends IndexAction[StageResult]
+  case class SwitchAlias(minT: Double, maxT: Double, alias: String) extends IndexAction[StageResult]
+  case class DeleteOldIndices(keep: Int, aliasProtection: Boolean) extends IndexAction[StageResult]
+
+  def createIndex: FreeIndexAction[StageResult] = liftF(CreateIndex)
+  def indexSource[A](source: Source[A, NotUsed]): FreeIndexAction[StageResult] =
+    liftF[IndexAction, StageResult](IndexSource(source))
+  def switchAlias(minT: Double, maxT: Double, alias: String): FreeIndexAction[StageResult] =
+    liftF(SwitchAlias(minT, maxT, alias))
+  def deleteOldIndices(keep: Int, aliasProtection: Boolean): FreeIndexAction[StageResult] =
+    liftF(DeleteOldIndices(keep, aliasProtection))
+
+  def write[A](source: Source[A, NotUsed]): EitherT[FreeIndexAction, IndexError, RunResult] = for {
+    created <- EitherT(createIndex)
+    indexed <- EitherT(indexSource(source))
+      .leftMap(_.copy(succeededStages = created :: Nil))
+  } yield RunResult(created, indexed)
+
+  def writeAndSwitch(done: EitherT[FreeIndexAction, IndexError, RunResult])(alias: String, minThreshold: Double, maxThreshold: Double) =
+    addRunStep(done, EitherT(switchAlias(minThreshold, maxThreshold, alias)))
+
+  def writeSwitchDelete[A](done: EitherT[FreeIndexAction, IndexError, RunResult])
+    (keep: Int, aliasProtection: Boolean) =
+    addRunStep(done, EitherT(deleteOldIndices(keep, aliasProtection)))
+
+  def writeDelete[A](done: EitherT[FreeIndexAction, IndexError, RunResult])(keep: Int, aliasProtection: Boolean) =
+    addRunStep(done, EitherT(deleteOldIndices(keep, aliasProtection)))
+
+  def addRunStep(
+    actionDone: => EitherT[FreeIndexAction, IndexError, RunResult],
+    nextStep: => EitherT[FreeIndexAction, IndexError, StageSucceeded]) =
+    for {
+      indexResult <- actionDone
+      success <- nextStep
         .leftMap(_.copy(succeededStages = indexResult.succeededStages.toList))
-    } yield RunResult(indexResult.succeededStages :+ success: _*))
-      .value
+    } yield RunResult(indexResult.succeededStages :+ success: _*)
 }
 
-class IndexableStream[A](source: Source[A, NotUsed])
-  (implicit system: ActorSystem, materializer: ActorMaterializer, indexable: Indexable[A]) {
+class IndexableStream[A](source: Source[A, NotUsed]) {
+  private lazy val write1 = write(source)
 
-  def runStream(esConf: ElasticWriteConfig)(implicit ex: ExecutionContext): IndexAction = {
-    val esWriter = ElasticWriter[A](esConf)
-    IndexableStream.addRunStep(
-      actionDone = EitherT(esWriter.createNewIndex).map(RunResult(_)).value,
-      nextStep = FullStream.run(source, esWriter.esSink, esConf.logWriteSpeedEvery)
-    )
-  }
+  def runStream: FreeIndexAction[Result] = write1.value
 
-  //todo add threshold option
   def switchAliasFrom(alias: String, minThreshold: Double = 0.95, maxThreshold: Double = 1.25): IndexableStreamWithSwitching =
-    new IndexableStreamWithSwitching((conf, ex) => runStream(conf)(ex), alias, minThreshold, maxThreshold)
+    new IndexableStreamWithSwitching(writeAndSwitch(write1)(alias, minThreshold, maxThreshold))
 
   def deleteOldIndices(keep: Int, aliasProtection: Boolean = true): IndexableStreamWithDeletion =
-    new IndexableStreamWithDeletion((conf, ex) => runStream(conf)(ex), keep, aliasProtection)
+    new IndexableStreamWithDeletion(writeDelete(write1)(keep, aliasProtection))
 }
 
-class IndexableStreamWithSwitching(run: (ElasticWriteConfig, ExecutionContext) => IndexAction, alias: String, minT: Double, maxT: Double) {
+class IndexableStreamWithSwitching(run: EitherT[FreeIndexAction, IndexError, RunResult]) {
 
-  def runStream(esConf: ElasticWriteConfig)(implicit ex: ExecutionContext): IndexAction =
-    IndexableStream.addRunStep(
-      actionDone = run(esConf, ex),
-      nextStep = AliasSwitching(EsOpsClient(esConf.client), minT, maxT).switchAlias(alias, esConf.indexName)
-    )
+  def runStream: FreeIndexAction[Result] = run.value
 
   def deleteOldIndices(keep: Int, aliasProtection: Boolean = true): IndexableStreamWithDeletion =
-    new IndexableStreamWithDeletion((conf, ex) => runStream(conf)(ex), keep, aliasProtection)
+    new IndexableStreamWithDeletion(writeSwitchDelete(run)(keep, aliasProtection))
 }
 
-class IndexableStreamWithDeletion(run: (ElasticWriteConfig, ExecutionContext) => IndexAction, keep: Int, aliasProtection: Boolean) {
-
-  def runStream(esConf: ElasticWriteConfig)(implicit ex: ExecutionContext): IndexAction =
-    IndexableStream.addRunStep(
-      actionDone = run(esConf, ex),
-      nextStep = IndexDeletion(EsOpsClient(esConf.client))
-        .deleteOldest(esConf.indexPrefix, esConf.indexName ,keep, aliasProtection)
-    )
+class IndexableStreamWithDeletion(run: EitherT[FreeIndexAction, IndexError, RunResult]) {
+  def runStream: FreeIndexAction[Result] = run.value
 }
 
 
