@@ -3,8 +3,9 @@ package com.gladow.indexer4s.elasticsearch
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Source}
-import com.gladow.indexer4s.Index_results.StageSucceeded
+import com.gladow.indexer4s.Index_results.{IndexError, StageSucceeded}
 import com.gladow.indexer4s.elasticsearch.TestObjects.{User, _}
+import com.gladow.indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
 import com.gladow.indexer4s.specs.ItSpec
 import com.sksamuel.elastic4s.Indexes
 import com.sksamuel.elastic4s.circe._
@@ -97,6 +98,13 @@ class ElasticWriterSpec extends ItSpec {
 
         realMapping should be(expected)
       }
+    }
+
+    "fail with index creation, if no connection could be established" in {
+      val notWorkingEs = ElasticWriteConfig(List("host"), 999, "cluster", "prefix", "docsType")
+      val writer = ElasticWriter[User](notWorkingEs)
+      writer.createNewIndex
+        .map(_.left.value shouldBe an[IndexError])
     }
   }
 

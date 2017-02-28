@@ -13,3 +13,4 @@ abstract class ItSpec
     with ElasticSugar
     with ElasticMatchers
     with CompleteLastly
+    with RecoverMethods

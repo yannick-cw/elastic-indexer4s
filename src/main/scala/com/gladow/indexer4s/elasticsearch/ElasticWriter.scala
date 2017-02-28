@@ -41,11 +41,11 @@ class ElasticWriter[A](
     maxAttempts = writeMaxAttempts
   )
 
-  val esSink: Sink[A, Future[Unit]] =
+  lazy val esSink: Sink[A, Future[Unit]] =
     Sink.fromSubscriber(esSubscriber)
       .mapMaterializedValue(_ => elasticFinishPromise.future)
 
-  private def tryIndexCreation: Future[Either[IndexError, StageSucceeded]] = client.execute(
+  private def tryIndexCreation: Try[Future[Either[IndexError, StageSucceeded]]] = Try(client.execute(
     createIndex(indexName)
       .mappings(mappings)
       .analysis(analyzer)
@@ -54,10 +54,11 @@ class ElasticWriter[A](
   ).map(res =>
     if (res.isAcknowledged) Right(StageSuccess(s"Index $indexName was created"))
     else Left(IndexError("Index creation was not acknowledged"))
-  )
+  ))
 
-  def createNewIndex: Future[Either[IndexError, StageSucceeded]] = tryIndexCreation.
-    recover { case NonFatal(t) =>
+  def createNewIndex: Future[Either[IndexError, StageSucceeded]] = Future.fromTry(tryIndexCreation)
+    .flatten
+    .recover { case NonFatal(t) =>
       Left(IndexError("Index creation failed with: " + t.getStackTrace.mkString("\n")))
     }
 }
