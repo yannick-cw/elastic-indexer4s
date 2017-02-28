@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 
 object FullStream extends LazyLogging {
 
-  def countAntLogSink[A](logPer: FiniteDuration): Sink[A, Future[Int]] = Flow[A]
+  private def countAntLogSink[A](logPer: FiniteDuration): Sink[A, Future[Int]] = Flow[A]
     .groupedWithin(Int.MaxValue, logPer)
     .map(_.length)
     .map { elementsPerTime =>
@@ -28,7 +28,7 @@ object FullStream extends LazyLogging {
         .toMat(sink)(Keep.both)
         .mapMaterializedValue{ case(fCount, fDone) => fDone.flatMap(_ => fCount) }
         .run()
-    } yield Right(StageSuccess(s"Indexed $count documents successfullyy")))
+    } yield Right(StageSuccess(s"Indexed $count documents successfully")))
       .recover { case NonFatal(t) =>
         Left(IndexError("Writing documents failed with: " + t.getStackTrace.mkString("\n")))
       }
