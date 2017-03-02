@@ -1,19 +1,14 @@
-package com.gladow.user
+## Elastic Indexer 4s
 
-import akka.stream.scaladsl.Source
-import com.gladow.indexer4s.ElasticIndexer4s
-import com.gladow.indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
+[![Build Status](https://travis-ci.org/yannick-cw/elastic-indexer4s.svg?branch=master)](https://travis-ci.org/yannick-cw/elastic-indexer4s)
+[![Coverage Status](https://coveralls.io/repos/github/yannick-cw/elastic-indexer4s/badge.svg?branch=free_test)](https://coveralls.io/github/yannick-cw/elastic-indexer4s?branch=free_test)
+
+## Usage Example
+```
 import com.sksamuel.elastic4s.circe.indexableWithCirce
 import io.circe.generic.auto._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.util.{Failure, Success}
-
-object UserExample extends App {
-
-  case class Tester(i: Int, s: String)
+case class Tester(i: Int, s: String)
 
   val dummySource = Source
     .repeat("10")
@@ -41,4 +36,4 @@ object UserExample extends App {
       case Success(res) => res.fold(println, println)
       case Failure(ex) => ex.printStackTrace
     }
-}
+```
