@@ -28,7 +28,7 @@ class ElasticseachInterpreter[Entity](esConf: ElasticWriteConfig)
       FullStream.run(source, writer.esSink, esConf.logWriteSpeedEvery)
 
     case SwitchAlias(minT, maxT, alias) =>
-      AliasSwitching(esOpsClient, minT, maxT).switchAlias(alias, esConf.indexName)
+      AliasSwitching(esOpsClient, minT, maxT, esConf.waitForElasticTimeout.toMillis).switchAlias(alias, esConf.indexName)
 
     case DeleteOldIndices(keep, aliasProtection) =>
       IndexDeletion(esOpsClient).deleteOldest(esConf.indexPrefix, esConf.indexName, keep, aliasProtection)

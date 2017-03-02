@@ -7,7 +7,7 @@ import com.gladow.indexer4s.Index_results.{IndexError, StageSucceeded}
 import scala.util.Right
 import scala.util.control.NonFatal
 
-class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Int, minThreshold: Double, maxThreshold: Double)
+class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Long, minThreshold: Double, maxThreshold: Double)
   (implicit ec: ExecutionContext) {
 
   import esClient._
@@ -38,7 +38,7 @@ class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Int, minThreshold
 }
 
 object AliasSwitching {
-  def apply(esClient: EsOpsClientApi,  minThreshold: Double, maxThreshold: Double, waitForElastic: Int = 1000)
+  def apply(esClient: EsOpsClientApi,  minThreshold: Double, maxThreshold: Double, waitForElastic: Long)
     (implicit ec: ExecutionContext): AliasSwitching = new AliasSwitching(esClient, waitForElastic, minThreshold, maxThreshold)
 }
 

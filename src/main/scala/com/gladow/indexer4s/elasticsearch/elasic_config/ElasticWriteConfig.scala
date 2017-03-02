@@ -22,7 +22,8 @@ case class ElasticWriteConfig(
   writeBatchSize: Int = 50,
   writeConcurrentRequest: Int = 10,
   writeMaxAttempts: Int = 5,
-  logWriteSpeedEvery: FiniteDuration = 1 minute
+  logWriteSpeedEvery: FiniteDuration = 1 minute,
+  waitForElasticTimeout: FiniteDuration = 5 seconds
 ) {
   val indexName = indexPrefix + "_" + new DateTime().toString("yyyy-MM-dd't'HH:mm:ss")
   private def settings = Settings.builder().put("cluster.name", cluster).build()
