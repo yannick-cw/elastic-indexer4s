@@ -1,7 +1,7 @@
 ## Elastic Indexer 4s
 
 [![Build Status](https://travis-ci.org/yannick-cw/elastic-indexer4s.svg?branch=master)](https://travis-ci.org/yannick-cw/elastic-indexer4s)
-[![Coverage Status](https://coveralls.io/repos/github/yannick-cw/elastic-indexer4s/badge.svg?branch=free_test)](https://coveralls.io/github/yannick-cw/elastic-indexer4s?branch=free_test)
+[![Coverage Status](https://coveralls.io/repos/github/yannick-cw/elastic-indexer4s/badge.svg?branch=master)](https://coveralls.io/github/yannick-cw/elastic-indexer4s?branch=free_test)
 
 ## Usage Example
 ```
