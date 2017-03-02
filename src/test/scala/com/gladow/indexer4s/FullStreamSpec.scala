@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import com.gladow.indexer4s.Index_results.{IndexError, StageSuccess}
+import com.gladow.indexer4s.indexing_logic.FullStream
 import com.gladow.indexer4s.specs.AsyncSpec
 
 import scala.concurrent.Future

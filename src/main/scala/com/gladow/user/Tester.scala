@@ -1,24 +1,19 @@
 package com.gladow.user
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
-import com.gladow.indexer4s.{ElasticIndexer4s, IndexInterpreter}
+import com.gladow.indexer4s.ElasticIndexer4s
 import com.gladow.indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
-import io.circe.generic.auto._
 import com.sksamuel.elastic4s.circe.indexableWithCirce
-import cats.implicits._
-import scala.concurrent.duration._
-import scala.concurrent.Future
+import io.circe.generic.auto._
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 object Tester extends App {
 
   case class Tester(i: Int, s: String)
-
-  implicit val system = ActorSystem()
-  implicit val materializer = ActorMaterializer()
 
   val dummySource = Source
     .repeat("10")
@@ -37,12 +32,11 @@ object Tester extends App {
     replicas = Some(2)
   )
 
-  ElasticIndexer4s
+  ElasticIndexer4s(config)
     .from(dummySource)
     .switchAliasFrom(alias = "newAlias")
     .deleteOldIndices(keep = 0, true)
-    .runStream
-    .foldMap(new IndexInterpreter[Tester](config))
+    .run
     .onComplete {
       case Success(res) => res.fold(println, println)
       case Failure(ex) => ex.printStackTrace
