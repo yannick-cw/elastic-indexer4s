@@ -6,6 +6,7 @@ import com.sksamuel.elastic4s.TcpClient
 import com.sksamuel.elastic4s.mappings.FieldType._
 import com.sksamuel.elastic4s.mappings.{MappingDefinition, TypedFieldDefinition}
 import org.scalacheck.Gen
+import scala.concurrent.duration._
 
 object TestObjects {
   case class Address(street: String, zip: Int)
@@ -37,7 +38,8 @@ object TestObjects {
   def testConf(
     replicas: Option[Int] = None,
     shards: Option[Int] = None,
-    mappings: List[MappingDefinition] = List.empty
+    mappings: List[MappingDefinition] = List.empty,
+    waitForEs: FiniteDuration = 1 second
   )(implicit c: TcpClient) = new ElasticWriteConfig(
     hosts = "host" :: Nil,
     port = 0,
@@ -46,6 +48,7 @@ object TestObjects {
     docType = "docs",
     shards = shards,
     replicas = replicas,
-    mappings = mappings
+    mappings = mappings,
+    waitForElasticTimeout = waitForEs
   ) { override lazy val client: TcpClient = c }
 }

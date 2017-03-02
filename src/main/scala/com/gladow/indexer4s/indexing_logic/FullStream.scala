@@ -1,4 +1,4 @@
-package com.gladow.indexer4s
+package com.gladow.indexer4s.indexing_logic
 
 import akka.NotUsed
 import akka.stream.ActorMaterializer
@@ -6,9 +6,9 @@ import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import com.gladow.indexer4s.Index_results.{IndexError, StageSucceeded, StageSuccess}
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
-import scala.concurrent.duration._
 
 object FullStream extends LazyLogging {
 
