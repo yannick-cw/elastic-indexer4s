@@ -1,3 +1,4 @@
 target
 .idea
 .dev
+src/main/scala/com/gladow/user/
