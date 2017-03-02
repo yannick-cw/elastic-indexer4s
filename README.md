@@ -4,7 +4,17 @@
 [![Coverage Status](https://coveralls.io/repos/github/yannick-cw/elastic-indexer4s/badge.svg?branch=master)](https://coveralls.io/github/yannick-cw/elastic-indexer4s?branch=master)
 
 ## Usage Example
-```
+
+```scala
+import akka.stream.scaladsl.Source
+import com.yannick_cw.indexer4s.ElasticIndexer4s
+import com.yannick_cw.indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
+import com.sksamuel.elastic4s.circe.indexableWithCirce
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
+
 import com.sksamuel.elastic4s.circe.indexableWithCirce
 import io.circe.generic.auto._
 

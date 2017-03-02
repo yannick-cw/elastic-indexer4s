@@ -1,4 +1,3 @@
 target
 .idea
-.dev
-src/main/scala/com/gladow/user/
+src/main/scala/com/yannick_cw/user
