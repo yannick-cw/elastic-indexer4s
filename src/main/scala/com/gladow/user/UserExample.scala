@@ -11,7 +11,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-object Tester extends App {
+object UserExample extends App {
 
   case class Tester(i: Int, s: String)
 

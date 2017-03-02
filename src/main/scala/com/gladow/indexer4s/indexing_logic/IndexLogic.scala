@@ -27,18 +27,14 @@ object IndexLogic {
   private def deleteOldIndices(keep: Int, aliasProtection: Boolean): StageAction[StageSucceeded] =
     EitherT(liftF(DeleteOldIndices(keep, aliasProtection)): FreeIndexAction[StageResult])
 
-  private def addRunStep(actionDone: StageAction[RunResult], nextStep: StageAction[StageSucceeded]) =
-    for {
-      indexResult <- actionDone
-      success <- nextStep
-        .leftMap(_.copy(succeededStages = indexResult.succeededStages.toList))
-    } yield RunResult(indexResult.succeededStages :+ success: _*)
+  private def addRunStep(actionDone: StageAction[RunResult], nextStep: StageAction[StageSucceeded]) = for {
+    indexResult <- actionDone
+    success <- nextStep
+      .leftMap(_.copy(succeededStages = indexResult.succeededStages.toList))
+  } yield RunResult(indexResult.succeededStages :+ success: _*)
 
-  def write[A](source: Source[A, NotUsed]): StageAction[RunResult] = for {
-    created <- createIndex
-    indexed <- indexSource(source)
-      .leftMap(_.copy(succeededStages = created :: Nil))
-  } yield RunResult(created, indexed)
+  def write[A](source: Source[A, NotUsed]): StageAction[RunResult] =
+    addRunStep(createIndex.map(RunResult(_)), indexSource(source))
 
   def addSwitch(writeDone: StageAction[RunResult], minT: Double, maxT: Double, alias: String) =
     addRunStep(writeDone, switchAlias(minT, maxT, alias))
