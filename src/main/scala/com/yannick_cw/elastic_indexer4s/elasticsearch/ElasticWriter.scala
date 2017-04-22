@@ -33,6 +33,7 @@ class ElasticWriter[A](
     errorFn = { (t: Throwable) => Try(elasticFinishPromise.failure(t)); () },
     listener = new ResponseListener {
       override def onAck(resp: RichBulkItemResponse): Unit = ()
+
       override def onFailure(resp: RichBulkItemResponse): Unit =
       //todo not yet sure if this could break too early
         Try(elasticFinishPromise.failure(resp.failure.getCause))
@@ -46,11 +47,15 @@ class ElasticWriter[A](
       .mapMaterializedValue(_ => elasticFinishPromise.future)
 
   private def tryIndexCreation: Try[Future[Either[IndexError, StageSucceeded]]] = Try(client.execute(
-    createIndex(indexName)
-      .mappings(mappings)
-      .analysis(analyzer)
-      .shards(shards)
-      .replicas(replicas)
+    mappingSetting.fold(
+      typed => createIndex(indexName)
+        .mappings(typed.mappings)
+        .analysis(typed.analyzer)
+        .shards(typed.shards)
+        .replicas(typed.replicas),
+      unsafe => createIndex(indexName)
+        .source(unsafe.source.spaces2)
+    )
   ).map(res =>
     if (res.isAcknowledged) Right(StageSuccess(s"Index $indexName was created"))
     else Left(IndexError("Index creation was not acknowledged"))
@@ -59,7 +64,7 @@ class ElasticWriter[A](
   def createNewIndex: Future[Either[IndexError, StageSucceeded]] = Future.fromTry(tryIndexCreation)
     .flatten
     .recover { case NonFatal(t) =>
-      Left(IndexError("Index creation failed with: " + t.getStackTrace.mkString("\n")))
+      Left(IndexError("Index creation failed with: " + t.getMessage + "\n" + t.getStackTrace.mkString("\n")))
     }
 }
 

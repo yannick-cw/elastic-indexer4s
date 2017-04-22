@@ -3,9 +3,12 @@ package com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config
 import com.sksamuel.elastic4s.TcpClient
 import com.sksamuel.elastic4s.analyzers.AnalyzerDefinition
 import com.sksamuel.elastic4s.mappings.MappingDefinition
+import io.circe.{Json, ParsingFailure}
 import org.elasticsearch.common.settings.Settings
 import org.joda.time.DateTime
+
 import scala.concurrent.duration._
+import io.circe.parser.parse
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -15,10 +18,7 @@ case class ElasticWriteConfig(
   cluster: String,
   indexPrefix: String,
   docType: String,
-  shards: Option[Int] = None,
-  replicas: Option[Int] = None,
-  analyzer: List[AnalyzerDefinition] = List.empty,
-  mappings: List[MappingDefinition] = List.empty,
+  mappingSetting: MappingSetting = TypedMappingSetting(),
   writeBatchSize: Int = 50,
   writeConcurrentRequest: Int = 10,
   writeMaxAttempts: Int = 5,

@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Source}
 import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded}
 import com.yannick_cw.elastic_indexer4s.elasticsearch.TestObjects.{User, _}
-import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
+import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.{ElasticWriteConfig, StringMappingSetting, TypedMappingSetting}
 import com.yannick_cw.elastic_indexer4s.specs.ItSpec
 import com.sksamuel.elastic4s.Indexes
 import com.sksamuel.elastic4s.circe._
@@ -14,8 +14,10 @@ import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.{Encoder, Json, JsonObject}
 import org.scalatest.FutureOutcome
-
+import cats.syntax.either._
+import io.circe._, io.circe.parser._
 import scala.collection.JavaConverters._
+import io.circe.optics.JsonPath._
 
 class ElasticWriterSpec extends ItSpec {
   implicit val system = ActorSystem()
@@ -36,7 +38,7 @@ class ElasticWriterSpec extends ItSpec {
     "be able to create the index with shards and replicas" in {
       val replicas = 5
       val shards = 3
-      val conf = testConf(Some(replicas), Some(shards))
+      val conf = testConf(TypedMappingSetting(replicas = Some(replicas), shards = Some(shards)))
       for {
         _ <- ElasticWriter(conf).createNewIndex
         settings <- client.execute(getSettings(conf.indexName))
@@ -62,9 +64,9 @@ class ElasticWriterSpec extends ItSpec {
       }
     }
 
-    "be able to create the index with a mapping" in {
+    "be able to create the index with a MappingDefinition" in {
       val userMapping = MappingDefinition(baseConf.docType) fields userMappingDef
-      val conf = testConf(mappings = List(userMapping))
+      val conf = testConf(TypedMappingSetting(mappings = List(userMapping)))
       val writer = ElasticWriter[User](conf)
       for {
         _ <- writer.createNewIndex.map(_.fold(er => throw new IllegalArgumentException(er.msg), identity))
@@ -81,7 +83,7 @@ class ElasticWriterSpec extends ItSpec {
 
     "be able to create the index with a mapping and not change the mapping after writing elements" in {
       val userMapping = MappingDefinition(baseConf.docType) fields userMappingDef
-      val conf = testConf(mappings = List(userMapping))
+      val conf = testConf(TypedMappingSetting(mappings = List(userMapping)))
       val writer = ElasticWriter[User](conf)
       val numberOfElems = 10
       val users = Stream.continually(TestObjects.randomUser).take(numberOfElems)
@@ -97,6 +99,32 @@ class ElasticWriterSpec extends ItSpec {
           .fold(throw _, identity)
 
         realMapping should be(expected)
+      }
+    }
+
+    "be able to create an index with string mapping and settings and not change the mapping after writing elements" in {
+      val replicas = 9
+      val shards = 7
+      val mappingSettingJson = jsonSettingMapping("doc", shards, replicas)
+      val unsafeSettingMapping = StringMappingSetting
+        .unsafeString(mappingSettingJson.spaces2).fold(throw _, identity)
+      val conf = testConf(mappingSetting = unsafeSettingMapping)
+
+      val writer = ElasticWriter[User](conf)
+      val numberOfElems = 10
+      val users = Stream.continually(TestObjects.randomUser).take(numberOfElems)
+      val userSource = Source(users)
+      for {
+        _ <- writer.createNewIndex.map(_.fold(er => throw new IllegalArgumentException(er.msg), identity))
+        _ <- userSource.toMat(writer.esSink)(Keep.right).run
+        _ = blockUntilCount(numberOfElems, conf.indexName)
+        mapping <- client.execute(getMapping(conf.indexName))
+        settings <- client.execute(getSettings(conf.indexName))
+      } yield {
+        val realMapping = esMappingToJson(mapping.mappings(conf.indexName)("doc").getSourceAsMap)
+        settings.getSetting(conf.indexName, "index.number_of_shards").toInt shouldBe shards
+        settings.getSetting(conf.indexName, "index.number_of_replicas").toInt shouldBe replicas
+        realMapping should be(root.mappings.doc.json.getOption(mappingSettingJson).get)
       }
     }
 

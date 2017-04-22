@@ -1,12 +1,15 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch
 
-import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
+import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.{ElasticWriteConfig, MappingSetting, TypedMappingSetting}
 import com.sksamuel.elastic4s.ElasticDsl.field
 import com.sksamuel.elastic4s.TcpClient
 import com.sksamuel.elastic4s.mappings.FieldType._
 import com.sksamuel.elastic4s.mappings.{MappingDefinition, TypedFieldDefinition}
+import io.circe.Json
 import org.scalacheck.Gen
+
 import scala.concurrent.duration._
+import io.circe.parser.parse
 
 object TestObjects {
   case class Address(street: String, zip: Int)
@@ -35,20 +38,51 @@ object TestObjects {
     )
   )
 
+  def jsonSettingMapping(docType: String, shards: Int, replicas: Int): Json = parse(
+    s"""
+      |{
+      |  "settings": {
+      |    "number_of_shards": $shards,
+      |    "number_of_replicas": $replicas
+      |  },
+      |  "mappings": {
+      |    "$docType": {
+      |      "properties" : {
+      |        "address" : {
+      |          "properties" : {
+      |            "street" : {
+      |              "type" : "text"
+      |            },
+      |            "zip" : {
+      |              "type" : "integer"
+      |            }
+      |          }
+      |        },
+      |        "age" : {
+      |          "type" : "integer"
+      |        },
+      |        "name" : {
+      |          "type" : "text"
+      |        }
+      |      }
+      |    }
+      |  }
+      |}
+      |
+      |
+    """.stripMargin
+  ).fold(throw _, identity)
+
   def testConf(
-    replicas: Option[Int] = None,
-    shards: Option[Int] = None,
-    mappings: List[MappingDefinition] = List.empty,
+    mappingSetting: MappingSetting = TypedMappingSetting(),
     waitForEs: FiniteDuration = 1 second
-  )(implicit c: TcpClient) = new ElasticWriteConfig(
+  )(implicit c: TcpClient): ElasticWriteConfig = new ElasticWriteConfig(
     hosts = "host" :: Nil,
     port = 0,
     cluster = "cluster",
     indexPrefix = "test_index",
     docType = "docs",
-    shards = shards,
-    replicas = replicas,
-    mappings = mappings,
+    mappingSetting = mappingSetting,
     waitForElasticTimeout = waitForEs
   ) { override lazy val client: TcpClient = c }
 }
