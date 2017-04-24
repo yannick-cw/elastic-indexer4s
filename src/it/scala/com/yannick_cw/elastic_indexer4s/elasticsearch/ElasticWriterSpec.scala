@@ -3,21 +3,20 @@ package com.yannick_cw.elastic_indexer4s.elasticsearch
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Source}
+import com.sksamuel.elastic4s.Indexes
+import com.sksamuel.elastic4s.circe._
+import com.sksamuel.elastic4s.mappings.{MappingContentBuilder, MappingDefinition}
 import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded}
 import com.yannick_cw.elastic_indexer4s.elasticsearch.TestObjects.{User, _}
 import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.{ElasticWriteConfig, StringMappingSetting, TypedMappingSetting}
 import com.yannick_cw.elastic_indexer4s.specs.ItSpec
-import com.sksamuel.elastic4s.Indexes
-import com.sksamuel.elastic4s.circe._
-import com.sksamuel.elastic4s.mappings.{MappingContentBuilder, MappingDefinition}
 import io.circe.generic.auto._
+import io.circe.optics.JsonPath._
 import io.circe.parser._
 import io.circe.{Encoder, Json, JsonObject}
 import org.scalatest.FutureOutcome
-import cats.syntax.either._
-import io.circe._, io.circe.parser._
+
 import scala.collection.JavaConverters._
-import io.circe.optics.JsonPath._
 
 class ElasticWriterSpec extends ItSpec {
   implicit val system = ActorSystem()

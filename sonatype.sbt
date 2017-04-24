@@ -4,8 +4,8 @@ pomExtra in Global := {
   <url>https://github.com/yannick-cw/elastic-indexer4s</url>
     <licenses>
       <license>
-        <name>Apache 2</name>
-        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        <name>MIT</name>
+        <url>https://opensource.org/licenses/MIT</url>
       </license>
     </licenses>
     <scm>

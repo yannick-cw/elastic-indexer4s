@@ -13,7 +13,7 @@ case class RunResult(succeededStages: StageSucceeded*) {
     """.stripMargin
 }
 
-case class IndexError(msg: String, succeededStages: List[StageSucceeded] = List.empty) {
+case class IndexError(msg: String, cause: Option[Throwable] = None, succeededStages: List[StageSucceeded] = List.empty) extends Error {
   override def toString: String =
     s"""
        |Indexing failed!

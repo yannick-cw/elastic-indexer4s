@@ -1,16 +1,10 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config
 
 import com.sksamuel.elastic4s.TcpClient
-import com.sksamuel.elastic4s.analyzers.AnalyzerDefinition
-import com.sksamuel.elastic4s.mappings.MappingDefinition
-import io.circe.{Json, ParsingFailure}
 import org.elasticsearch.common.settings.Settings
 import org.joda.time.DateTime
 
-import scala.concurrent.duration._
-import io.circe.parser.parse
-
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{FiniteDuration, _}
 
 case class ElasticWriteConfig(
   hosts: List[String],

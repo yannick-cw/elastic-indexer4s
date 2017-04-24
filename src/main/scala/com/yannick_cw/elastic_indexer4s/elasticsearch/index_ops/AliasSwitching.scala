@@ -14,7 +14,7 @@ class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Long, minThreshol
 
   def switchAlias(alias: String, newIndexName: String): Future[Either[IndexError, StageSucceeded]] = trySwitching(alias, newIndexName)
     .recover { case NonFatal(ex) =>
-        Left(IndexError("Could not switch alias with: " + ex.toString + "\n" + ex.getStackTrace.mkString("\n")))
+        Left(IndexError("Could not switch alias.", Some(ex)))
     }
 
   private def trySwitching(alias: String, newIndexName: String): Future[Either[IndexError, StageSucceeded]] = for {

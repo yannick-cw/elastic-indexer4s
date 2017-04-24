@@ -64,7 +64,7 @@ class ElasticWriter[A](
   def createNewIndex: Future[Either[IndexError, StageSucceeded]] = Future.fromTry(tryIndexCreation)
     .flatten
     .recover { case NonFatal(t) =>
-      Left(IndexError("Index creation failed with: " + t.getMessage + "\n" + t.getStackTrace.mkString("\n")))
+      Left(IndexError("Index creation failed.", Some(t)))
     }
 }
 

@@ -30,6 +30,6 @@ object FullStream extends LazyLogging {
         .run()
     } yield Right(StageSuccess(s"Indexed $count documents successfully")))
       .recover { case NonFatal(t) =>
-        Left(IndexError("Writing documents failed with: " + t.getStackTrace.mkString("\n")))
+        Left(IndexError("Writing documents failed.", Some(t)))
       }
 }
