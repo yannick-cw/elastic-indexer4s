@@ -3,7 +3,7 @@ import sbt._
 object Dependencies {
   val elastic4sVersion = "5.2.7"
   val circeVersion = "0.7.0"
-  private val akkaHttpVersion = "2.4.17"
+  private val akkaHttpVersion = "2.5.0"
 
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
