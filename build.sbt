@@ -5,9 +5,10 @@ lazy val root = (project in file(".")).
     inThisBuild(List(
       scalaVersion := "2.12.1",
       version      := "0.1",
+      organization := "io.github.yannick-cw",
       fork in run := true
     )),
-    name := "elastic-indexer4s",
+    name := "elastic_indexer4s",
     libraryDependencies ++= Seq(
       scalaTest,
       scalaCheck,
