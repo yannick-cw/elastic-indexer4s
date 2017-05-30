@@ -28,7 +28,7 @@ To get started with SBT, simply add the following to your `build.sbt`
 file:
 
 ```scala
-libraryDependencies += "io.github.yannick-cw" % "elastic_indexer4s_2.12" % "0.1"
+libraryDependencies += "io.github.yannick-cw" % "elastic_indexer4s_2.12" % "0.2"
 ```
 
 First you need a Configuration:
