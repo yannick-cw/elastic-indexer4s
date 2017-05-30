@@ -42,6 +42,18 @@ class IndexDeletionSpec extends AsyncSpec {
       }
     }
 
+    "keep at least defined amount of indices, even if there are newer indices with different prefix" in {
+      val indicesWithSamePrefix = (1 to 10).map(i => IndexWithInfo(s"index$i", List(s"alias"), i))
+      val differentIndices = (11 to 20).map(i => IndexWithInfo(s"some$i", List(s"alias"), i))
+      val opsClient = testEsOpsClient(newIndex +: (indicesWithSamePrefix ++ differentIndices):_*)
+      val deleter = IndexDeletion(opsClient)
+
+      deleter.deleteOldest("inde", "index0", 3, false).map { deletionResult =>
+        deletionResult.right.value shouldBe a [StageSucceeded]
+        opsClient.deletedIndices should have length 7
+      }
+    }
+
     "delete the oldest indices first if more indices than defined to keep" in {
       val indices = scala.util.Random.shuffle((1 to 10).map(i => IndexWithInfo(s"index$i", List.empty, i)))
       val opsClient = testEsOpsClient(newIndex +: indices:_*)
