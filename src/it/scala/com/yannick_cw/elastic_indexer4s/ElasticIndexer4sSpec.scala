@@ -4,10 +4,12 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import com.yannick_cw.elastic_indexer4s.elasticsearch.TestObjects
-import com.yannick_cw.elastic_indexer4s.elasticsearch.TestObjects.testConf
+import com.yannick_cw.elastic_indexer4s.elasticsearch.TestObjects.{User, testConf}
 import com.yannick_cw.elastic_indexer4s.specs.ItSpec
 import com.sksamuel.elastic4s.Indexes
+import com.sksamuel.elastic4s.streams.RequestBuilder
 import org.scalatest.FutureOutcome
+
 import scala.concurrent.duration._
 
 class ElasticIndexer4sSpec extends ItSpec {
@@ -32,6 +34,24 @@ class ElasticIndexer4sSpec extends ItSpec {
 
       ElasticIndexer4s(baseConf, system, materializer, executionContext)
         .from(userSource)
+        .run
+        .map { res =>
+          blockUntilCount(numberOfElems, baseConf.indexName)
+          baseConf.indexName should haveCount(numberOfElems)
+          res shouldBe a[Right[_, _]]
+        }
+    }
+
+    "be able to create and write to a new index with requestBuilder" in {
+      val numberOfElems = 100
+      val users = Stream.continually(TestObjects.randomUser).take(numberOfElems)
+      val userSource = Source(users)
+
+      implicit val builder: RequestBuilder[User] =
+        (t: User) => indexInto(baseConf.indexName / baseConf.docType) source t
+
+      ElasticIndexer4s(baseConf, system, materializer, executionContext)
+        .fromBuilder(userSource)
         .run
         .map { res =>
           blockUntilCount(numberOfElems, baseConf.indexName)

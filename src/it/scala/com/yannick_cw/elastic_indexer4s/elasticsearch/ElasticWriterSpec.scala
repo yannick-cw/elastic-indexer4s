@@ -6,6 +6,7 @@ import akka.stream.scaladsl.{Keep, Source}
 import com.sksamuel.elastic4s.Indexes
 import com.sksamuel.elastic4s.circe._
 import com.sksamuel.elastic4s.mappings.{MappingContentBuilder, MappingDefinition}
+import com.sksamuel.elastic4s.streams.RequestBuilder
 import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded}
 import com.yannick_cw.elastic_indexer4s.elasticsearch.TestObjects.{User, _}
 import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.{ElasticWriteConfig, StringMappingSetting, TypedMappingSetting}
@@ -28,8 +29,13 @@ class ElasticWriterSpec extends ItSpec {
 
   val baseConf = testConf()
 
+  def userRequestBuilder(indexName: String): RequestBuilder[User] =
+    (t: User) => indexInto(indexName / testConf().docType) source t
+
   "ElasticWriter" should {
     "be able to create a new index" in {
+      implicit val builder = userRequestBuilder(baseConf.indexName)
+
       ElasticWriter(baseConf).createNewIndex
         .map(_.right.value shouldBe a[StageSucceeded])
     }
@@ -38,6 +44,8 @@ class ElasticWriterSpec extends ItSpec {
       val replicas = 5
       val shards = 3
       val conf = testConf(TypedMappingSetting(replicas = Some(replicas), shards = Some(shards)))
+      implicit val builder = userRequestBuilder(conf.indexName)
+
       for {
         _ <- ElasticWriter(conf).createNewIndex
         settings <- client.execute(getSettings(conf.indexName))
@@ -48,6 +56,7 @@ class ElasticWriterSpec extends ItSpec {
     }
 
     "be able to create the index and write elements" in {
+      implicit val builder = userRequestBuilder(baseConf.indexName)
       val writer = ElasticWriter[User](baseConf)
       val numberOfElems = 1000
       val users = Stream.continually(TestObjects.randomUser).take(numberOfElems)
@@ -64,6 +73,7 @@ class ElasticWriterSpec extends ItSpec {
     }
 
     "be able to create the index with a MappingDefinition" in {
+      implicit val builder = userRequestBuilder(baseConf.indexName)
       val userMapping = MappingDefinition(baseConf.docType) fields userMappingDef
       val conf = testConf(TypedMappingSetting(mappings = List(userMapping)))
       val writer = ElasticWriter[User](conf)
@@ -83,6 +93,7 @@ class ElasticWriterSpec extends ItSpec {
     "be able to create the index with a mapping and not change the mapping after writing elements" in {
       val userMapping = MappingDefinition(baseConf.docType) fields userMappingDef
       val conf = testConf(TypedMappingSetting(mappings = List(userMapping)))
+      implicit val builder = userRequestBuilder(conf.indexName)
       val writer = ElasticWriter[User](conf)
       val numberOfElems = 10
       val users = Stream.continually(TestObjects.randomUser).take(numberOfElems)
@@ -109,6 +120,7 @@ class ElasticWriterSpec extends ItSpec {
         .unsafeString(mappingSettingJson.spaces2).fold(throw _, identity)
       val conf = testConf(mappingSetting = unsafeSettingMapping)
 
+      implicit val builder = userRequestBuilder(conf.indexName)
       val writer = ElasticWriter[User](conf)
       val numberOfElems = 10
       val users = Stream.continually(TestObjects.randomUser).take(numberOfElems)
@@ -129,6 +141,7 @@ class ElasticWriterSpec extends ItSpec {
 
     "fail with index creation, if no connection could be established" in {
       val notWorkingEs = ElasticWriteConfig(List("host"), 999, "cluster", "prefix", "docsType")
+      implicit val builder = userRequestBuilder(notWorkingEs.indexName)
       val writer = ElasticWriter[User](notWorkingEs)
       writer.createNewIndex
         .map(_.left.value shouldBe an[IndexError])
