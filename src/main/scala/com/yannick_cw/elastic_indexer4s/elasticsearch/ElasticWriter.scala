@@ -2,27 +2,22 @@ package com.yannick_cw.elastic_indexer4s.elasticsearch
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Sink
-import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded, StageSuccess}
-import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.Indexable
-import com.sksamuel.elastic4s.bulk.{BulkCompatibleDefinition, RichBulkItemResponse}
+import com.sksamuel.elastic4s.bulk.RichBulkItemResponse
 import com.sksamuel.elastic4s.streams.ReactiveElastic._
 import com.sksamuel.elastic4s.streams.{BulkIndexingSubscriber, RequestBuilder, ResponseListener}
+import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded, StageSuccess}
+import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 import scala.util.control.NonFatal
 
 class ElasticWriter[A](
-  esConf: ElasticWriteConfig)(implicit system: ActorSystem, indexable: Indexable[A], ex: ExecutionContext) {
+  esConf: ElasticWriteConfig)(implicit system: ActorSystem, requestBuilder: RequestBuilder[A], ex: ExecutionContext) {
 
   import esConf._
-
-  private implicit val builder = new RequestBuilder[A] {
-    def request(post: A): BulkCompatibleDefinition =
-      indexInto(indexName / docType) source post
-  }
 
   //promise that is passed to the error and completion function of the elastic subscriber
   private val elasticFinishPromise: Promise[Unit] = Promise[Unit]()
@@ -70,6 +65,6 @@ class ElasticWriter[A](
 
 object ElasticWriter {
   def apply[A](esConf: ElasticWriteConfig)
-    (implicit system: ActorSystem, indexable: Indexable[A], ex: ExecutionContext): ElasticWriter[A] =
+    (implicit system: ActorSystem, requestBuilder: RequestBuilder[A], ex: ExecutionContext): ElasticWriter[A] =
     new ElasticWriter[A](esConf)
 }

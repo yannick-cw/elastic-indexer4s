@@ -1,27 +1,26 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch
 
-import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.{ElasticWriteConfig, MappingSetting, TypedMappingSetting}
-import com.sksamuel.elastic4s.ElasticDsl.field
+import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.TcpClient
-import com.sksamuel.elastic4s.mappings.FieldType._
-import com.sksamuel.elastic4s.mappings.{MappingDefinition, TypedFieldDefinition}
+import com.sksamuel.elastic4s.mappings.FieldDefinition
+import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.{ElasticWriteConfig, MappingSetting, TypedMappingSetting}
 import io.circe.Json
+import io.circe.parser.parse
 import org.scalacheck.Gen
 
 import scala.concurrent.duration._
-import io.circe.parser.parse
 
 object TestObjects {
   case class Address(street: String, zip: Int)
   case class User(name: String, age: Int, address: Address)
   case class NotMatchingUser(name: Int)
 
-  implicit val addressGen: Gen[Address] = for {
+  private val addressGen: Gen[Address] = for {
     street <- Gen.alphaStr
     zip <- Gen.posNum[Int]
   } yield Address(street, zip)
 
-  val userGen = for {
+  private val userGen = for {
     name <- Gen.alphaStr
     age <- Gen.posNum[Int]
     address <- addressGen
@@ -29,12 +28,12 @@ object TestObjects {
 
   def randomUser: User = userGen.sample.get
 
-  val userMappingDef: List[TypedFieldDefinition] = List(
-    field("name", TextType),
-    field("age", IntegerType),
-    field("address", ObjectType) inner(
-      field("street", TextType),
-      field("zip", IntegerType)
+  val userMappingDef: List[FieldDefinition] = List(
+    textField("name"),
+    intField("age"),
+    objectField("address").fields(
+      textField("street"),
+      intField("zip")
     )
   )
 
@@ -81,7 +80,7 @@ object TestObjects {
     port = 0,
     cluster = "cluster",
     indexPrefix = "test_index",
-    docType = "docs",
+    docType = "docType",
     mappingSetting = mappingSetting,
     waitForElasticTimeout = waitForEs
   ) { override lazy val client: TcpClient = c }

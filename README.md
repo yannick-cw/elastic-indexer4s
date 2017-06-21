@@ -113,6 +113,10 @@ with analyzers and mappings defined in elastic4s syntax or pass a
  ```
  which gives you a `parsingFailure` on creation if the string can't be parsed to json.
  
+ The `.from([source])` method requires you to give an `Indexable` for the elements to be indexed. Alternatively
+ you can use `.fromBuilder`, if you want to give an implicit `RequestBuilder`. This allows for more configuration
+ for the indexing, e.g. you can specify which `id` or which `timestamp` to use.
+ 
  #### Alias switching
  
  You can add the `.switchAliasFrom` step to the process of writing, if you want to switch an alias from
