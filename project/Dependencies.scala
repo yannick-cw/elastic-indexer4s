@@ -1,9 +1,9 @@
 import sbt._
 
 object Dependencies {
-  val elastic4sVersion = "5.2.7"
-  val circeVersion = "0.7.0"
-  private val akkaHttpVersion = "2.5.0"
+  val elastic4sVersion = "5.4.5"
+  val circeVersion = "0.8.0"
+  private val akkaVersion = "2.5.3"
 
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
@@ -17,7 +17,7 @@ object Dependencies {
 
   lazy val elastic4sTestkit = "com.sksamuel.elastic4s" %% "elastic4s-testkit" % elastic4sVersion
 
-  lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaHttpVersion
+  lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
 
   lazy val cats =  "org.typelevel" %% "cats" % "0.9.0"
 
