@@ -95,6 +95,7 @@ The switching and deleting are optional.
 |`writeMaxAttempts: Int`  |     the retry attempts to write before failure, defaults to 5          |
 |`logWriteSpeedEvery: FiniteDuration` |    the time interval in which it is logged how many documents were written, defaults to a minute           |
 |`waitForElasticTimeout: FiniteDuratio` |    time to wait to count the documents before switching alias, default to 5 seconds           |
+|`sniffCluster` |    activate or deactivate [sniffing feature] (https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/transport-client.html#transport-client) for the client
 
 
 The `MappingSetting` can be passed to specify mappings and settings for the index.
