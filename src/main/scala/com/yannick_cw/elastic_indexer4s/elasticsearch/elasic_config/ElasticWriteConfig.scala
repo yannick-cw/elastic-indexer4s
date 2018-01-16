@@ -17,10 +17,12 @@ case class ElasticWriteConfig(
   writeConcurrentRequest: Int = 10,
   writeMaxAttempts: Int = 5,
   logWriteSpeedEvery: FiniteDuration = 1 minute,
-  waitForElasticTimeout: FiniteDuration = 5 seconds
+  waitForElasticTimeout: FiniteDuration = 5 seconds,
+  sniffCluster: Boolean = false
 ) {
   val indexName = indexPrefix + "_" + new DateTime().toString("yyyy-MM-dd't'HH:mm:ss")
-  private def settings = Settings.builder().put("cluster.name", cluster).build()
+  private def settings =
+    Settings.builder().put("cluster.name", cluster).put("client.transport.sniff", sniffCluster).build()
   lazy val client: TcpClient = TcpClient.transport(settings, "elasticsearch://" + hosts
     .map(host => s"$host:$port").mkString(","))
 }
