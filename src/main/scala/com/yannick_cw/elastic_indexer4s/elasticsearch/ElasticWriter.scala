@@ -2,9 +2,8 @@ package com.yannick_cw.elastic_indexer4s.elasticsearch
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Sink
-import com.sksamuel.elastic4s.ElasticDsl._
-import com.sksamuel.elastic4s.Indexable
-import com.sksamuel.elastic4s.bulk.RichBulkItemResponse
+import com.sksamuel.elastic4s.http.ElasticDsl._
+import com.sksamuel.elastic4s.http.bulk.BulkResponseItem
 import com.sksamuel.elastic4s.streams.ReactiveElastic._
 import com.sksamuel.elastic4s.streams.{BulkIndexingSubscriber, RequestBuilder, ResponseListener}
 import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded, StageSuccess}
@@ -26,12 +25,12 @@ class ElasticWriter[A](
     batchSize = writeBatchSize,
     completionFn = { () => Try(elasticFinishPromise.success(())); () },
     errorFn = { (t: Throwable) => Try(elasticFinishPromise.failure(t)); () },
-    listener = new ResponseListener {
-      override def onAck(resp: RichBulkItemResponse): Unit = ()
+    listener = new ResponseListener[A] {
+      override def onAck(resp: BulkResponseItem, original: A): Unit = ()
 
-      override def onFailure(resp: RichBulkItemResponse): Unit =
+      override def onFailure(resp: BulkResponseItem, original: A): Unit =
       //todo not yet sure if this could break too early
-        Try(elasticFinishPromise.failure(resp.failure.getCause))
+        Try(elasticFinishPromise.failure(new Exception("Failed indexing with: " + resp.error)))
     },
     concurrentRequests = writeConcurrentRequest,
     maxAttempts = writeMaxAttempts
@@ -51,10 +50,8 @@ class ElasticWriter[A](
       unsafe => createIndex(indexName)
         .source(unsafe.source.spaces2)
     )
-  ).map(res =>
-    if (res.isAcknowledged) Right(StageSuccess(s"Index $indexName was created"))
-    else Left(IndexError("Index creation was not acknowledged"))
-  ))
+  ).map(_.fold(_ => Left(IndexError("Index creation was not acknowledged")), _ => Right(StageSuccess(s"Index $indexName was created"))
+  )))
 
   def createNewIndex: Future[Either[IndexError, StageSucceeded]] = Future.fromTry(tryIndexCreation)
     .flatten

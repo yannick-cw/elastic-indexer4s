@@ -1,14 +1,14 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch.index_ops
 
 import cats.implicits._
-import com.sksamuel.elastic4s.ElasticDsl.{addAlias, removeAlias, search, _}
-import com.sksamuel.elastic4s.TcpClient
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse
+import com.sksamuel.elastic4s.http.ElasticDsl.{addAlias, removeAlias, search, _}
+import com.sksamuel.elastic4s.http.index.admin.{AliasActionResponse, DeleteIndexResponse}
+import com.sksamuel.elastic4s.http.settings.IndexSettingsResponse
+import com.sksamuel.elastic4s.http.{HttpClient, RequestFailure, RequestSuccess}
 
-import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 case class IndexWithInfo(index: String, aliases: List[String], creationTime: Long)
 
@@ -39,29 +39,49 @@ trait EsOpsClientApi {
   } yield ()
 }
 
-class EsOpsClient(client: TcpClient) extends EsOpsClientApi {
+class EsOpsClient(client: HttpClient) extends EsOpsClientApi {
+
+  def throwErr[A](res: Either[RequestFailure, RequestSuccess[A]]): A =
+    res.fold(err => throw new Exception("Failed with: " + err.error.rootCause.mkString("\n")), _.result)
 
   def delete(index: String): Future[DeleteIndexResponse] =
-    client.execute(deleteIndex(index))
+    {
+      val a = client.execute(deleteIndex(index)).map(throwErr)
+      a.onComplete(x => println("deleted: " + x))
+      a
+    }
 
-  //todo in terms of elastic4s
-  def allIndicesWithAliasInfo: Future[List[IndexWithInfo]] = Future(
-    client.java.admin().cluster().prepareState().execute().actionGet().getState.getMetaData.indices().asScala
-      .map(c => IndexWithInfo(c.key, c.value.getAliases.asScala.map(_.key).toList, c.value.getCreationDate))
+  private def indexCreationDate(indexName: String, response: IndexSettingsResponse): Option[Long] =
+    for {
+      indexSettings  <- response.settings.get(indexName)
+      creationDate <- indexSettings.get("index.creation_date")
+    } yield creationDate.toLong
+
+  def allIndicesWithAliasInfo: Future[List[IndexWithInfo]] =
+    for {
+      aliases  <- client.execute(getAliases()).map(throwErr)
+      settings <- client.execute(getSettings(aliases.mappings.keys.map(_.name))).map(throwErr)
+    } yield
+      aliases.mappings
+      .map {
+             case (index, aliasi) =>
+               indexCreationDate(index.name, settings).map(date =>
+                                                             IndexWithInfo(index.name, aliasi.toList.map(_.name), date))
+           }
+      .collect { case Some(x) => x }
       .toList
-  )
 
-  def removeAliasFromIndex(index: String, alias: String): Future[IndicesAliasesResponse] =
-    client.execute(removeAlias(alias) on index)
+  def removeAliasFromIndex(index: String, alias: String): Future[AliasActionResponse] =
+    client.execute(removeAlias(alias) on index).map(throwErr)
 
-  def addAliasToIndex(index: String, alias: String): Future[IndicesAliasesResponse] =
-    client.execute(addAlias(alias) on index)
+  def addAliasToIndex(index: String, alias: String): Future[AliasActionResponse] =
+    client.execute(addAlias(alias) on index).map(throwErr)
 
   def sizeFor(index: String): Future[Long] =
-    client.execute(search(index) size 0)
+    client.execute(search(index) size 0).map(throwErr)
       .map(_.totalHits)
 }
 
 object EsOpsClient {
-  def apply(client: TcpClient): EsOpsClient = new EsOpsClient(client)
+  def apply(client: HttpClient): EsOpsClient = new EsOpsClient(client)
 }

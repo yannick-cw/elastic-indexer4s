@@ -1,17 +1,18 @@
 import sbt._
 
 object Dependencies {
-  val elastic4sVersion = "5.4.5"
-  val circeVersion = "0.8.0"
-  private val akkaVersion = "2.5.3"
+  val elastic4sVersion = "6.2.6"
+  val circeVersion     = "0.9.3"
+  val catsVersion      = "1.1.0"
+  val akkaVersion      = "2.5.12"
 
-  lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+  lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 
-  lazy val scalaCheck =  "org.scalacheck" % "scalacheck_2.12" % "1.13.4" % "test"
+  lazy val scalaCheck = "org.scalacheck" % "scalacheck_2.12" % "1.14.0" % "test"
 
   lazy val elastic4s = Seq(
     "com.sksamuel.elastic4s" %% "elastic4s-core",
-    "com.sksamuel.elastic4s" %% "elastic4s-streams",
+    "com.sksamuel.elastic4s" %% "elastic4s-http-streams",
     "com.sksamuel.elastic4s" %% "elastic4s-circe"
   ).map(_ % elastic4sVersion)
 
@@ -19,7 +20,7 @@ object Dependencies {
 
   lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
 
-  lazy val cats =  "org.typelevel" %% "cats" % "0.9.0"
+  lazy val cats = Seq("org.typelevel" %% "cats-core", "org.typelevel" %% "cats-free").map(_ % catsVersion)
 
   lazy val circe = Seq(
     "io.circe" %% "circe-core",
@@ -29,7 +30,7 @@ object Dependencies {
   ).map(_ % circeVersion)
 
   lazy val log = Seq(
-    "ch.qos.logback" % "logback-classic" % "1.1.7",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
+    "ch.qos.logback"             % "logback-classic" % "1.1.7",
+    "com.typesafe.scala-logging" %% "scala-logging"  % "3.5.0"
   )
 }

@@ -1,7 +1,7 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch
 
 import com.sksamuel.elastic4s.ElasticDsl._
-import com.sksamuel.elastic4s.TcpClient
+import com.sksamuel.elastic4s.http.HttpClient
 import com.sksamuel.elastic4s.mappings.FieldDefinition
 import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.{ElasticWriteConfig, MappingSetting, TypedMappingSetting}
 import io.circe.Json
@@ -75,7 +75,7 @@ object TestObjects {
   def testConf(
     mappingSetting: MappingSetting = TypedMappingSetting(),
     waitForEs: FiniteDuration = 1 second
-  )(implicit c: TcpClient): ElasticWriteConfig = new ElasticWriteConfig(
+  )(implicit c: HttpClient): ElasticWriteConfig = new ElasticWriteConfig(
     hosts = "host" :: Nil,
     port = 0,
     cluster = "cluster",
@@ -83,5 +83,5 @@ object TestObjects {
     docType = "docType",
     mappingSetting = mappingSetting,
     waitForElasticTimeout = waitForEs
-  ) { override lazy val client: TcpClient = c }
+  ) { override lazy val client: HttpClient = c }
 }

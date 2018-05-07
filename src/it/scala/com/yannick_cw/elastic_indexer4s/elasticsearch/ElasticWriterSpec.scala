@@ -5,7 +5,8 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Source}
 import com.sksamuel.elastic4s.Indexes
 import com.sksamuel.elastic4s.circe._
-import com.sksamuel.elastic4s.mappings.{MappingContentBuilder, MappingDefinition}
+import com.sksamuel.elastic4s.mappings.{MappingBuilderFn, MappingDefinition}
+import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.streams.RequestBuilder
 import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded}
 import com.yannick_cw.elastic_indexer4s.elasticsearch.TestObjects.{User, _}
@@ -16,8 +17,6 @@ import io.circe.optics.JsonPath._
 import io.circe.parser._
 import io.circe.{Encoder, Json, JsonObject}
 import org.scalatest.FutureOutcome
-
-import scala.collection.JavaConverters._
 
 class ElasticWriterSpec extends ItSpec {
   implicit val system = ActorSystem()
@@ -48,10 +47,10 @@ class ElasticWriterSpec extends ItSpec {
 
       for {
         _ <- ElasticWriter(conf).createNewIndex
-        settings <- client.execute(getSettings(conf.indexName))
+        settings <- http.execute(getSettings(conf.indexName)).toResult
       } yield {
-        settings.getSetting(conf.indexName, "index.number_of_shards").toInt shouldBe shards
-        settings.getSetting(conf.indexName, "index.number_of_replicas").toInt shouldBe replicas
+        settings.settings(conf.indexName)("index.number_of_shards").toInt shouldBe shards
+        settings.settings(conf.indexName)("index.number_of_replicas").toInt shouldBe replicas
       }
     }
 
@@ -65,7 +64,7 @@ class ElasticWriterSpec extends ItSpec {
         _ <- writer.createNewIndex
         _ <- userSource.toMat(writer.esSink)(Keep.right).run
         _ = blockUntilCount(numberOfElems, baseConf.indexName)
-        allUsers <- client.execute(search(baseConf.indexName) matchAllQuery() size numberOfElems)
+        allUsers <- http.execute(search(baseConf.indexName) matchAllQuery() size numberOfElems).toResult
       } yield {
         baseConf.indexName should haveCount(numberOfElems)
         allUsers.to[User] should contain theSameElementsAs users
@@ -80,10 +79,11 @@ class ElasticWriterSpec extends ItSpec {
       for {
         _ <- writer.createNewIndex.map(_.fold(er => throw new IllegalArgumentException(er.msg), identity))
         _ = blockUntilIndexExists(conf.indexName)
-        mapping <- client.execute(getMapping(conf.indexName))
+        mappings <- http.execute(getMapping(conf.indexName)).toResult
       } yield {
-        val realMapping = esMappingToJson(mapping.mappings(conf.indexName)(conf.docType).getSourceAsMap)
-        val expected = parse(MappingContentBuilder.build(userMapping).string.replaceAll(""""type":"object",""", ""))
+        val realMapping = esMappingToJson(mappings.find(_.index == conf.indexName).get.mappings(conf.docType))
+        val expected = parse(MappingBuilderFn.build(userMapping).string.replaceAll(""""type":"object",""", ""))
+          .map(_.hcursor.downField("properties").focus.get)
           .fold(throw _, identity)
 
         realMapping should be(expected)
@@ -102,10 +102,11 @@ class ElasticWriterSpec extends ItSpec {
         _ <- writer.createNewIndex.map(_.fold(er => throw new IllegalArgumentException(er.msg), identity))
         _ <- userSource.toMat(writer.esSink)(Keep.right).run
         _ = blockUntilCount(numberOfElems, conf.indexName)
-        mapping <- client.execute(getMapping(conf.indexName))
+        mappings <- http.execute(getMapping(conf.indexName)).toResult
       } yield {
-        val realMapping = esMappingToJson(mapping.mappings(conf.indexName)(conf.docType).getSourceAsMap)
-        val expected = parse(MappingContentBuilder.build(userMapping).string.replaceAll(""""type":"object",""", ""))
+        val realMapping = esMappingToJson(mappings.find(_.index == conf.indexName).get.mappings(conf.docType))
+        val expected = parse(MappingBuilderFn.build(userMapping).string.replaceAll(""""type":"object",""", ""))
+          .map(_.hcursor.downField("properties").focus.get)
           .fold(throw _, identity)
 
         realMapping should be(expected)
@@ -115,7 +116,7 @@ class ElasticWriterSpec extends ItSpec {
     "be able to create an index with string mapping and settings and not change the mapping after writing elements" in {
       val replicas = 9
       val shards = 7
-      val mappingSettingJson = jsonSettingMapping("doc", shards, replicas)
+      val mappingSettingJson = jsonSettingMapping("docType", shards, replicas)
       val unsafeSettingMapping = StringMappingSetting
         .unsafeString(mappingSettingJson.spaces2).fold(throw _, identity)
       val conf = testConf(mappingSetting = unsafeSettingMapping)
@@ -129,13 +130,13 @@ class ElasticWriterSpec extends ItSpec {
         _ <- writer.createNewIndex.map(_.fold(er => throw new IllegalArgumentException(er.msg), identity))
         _ <- userSource.toMat(writer.esSink)(Keep.right).run
         _ = blockUntilCount(numberOfElems, conf.indexName)
-        mapping <- client.execute(getMapping(conf.indexName))
-        settings <- client.execute(getSettings(conf.indexName))
+        mappings <- http.execute(getMapping(conf.indexName)).toResult
+        settings <- http.execute(getSettings(conf.indexName)).toResult
       } yield {
-        val realMapping = esMappingToJson(mapping.mappings(conf.indexName)("doc").getSourceAsMap)
-        settings.getSetting(conf.indexName, "index.number_of_shards").toInt shouldBe shards
-        settings.getSetting(conf.indexName, "index.number_of_replicas").toInt shouldBe replicas
-        realMapping should be(root.mappings.doc.json.getOption(mappingSettingJson).get)
+        val realMapping = esMappingToJson(mappings.find(_.index == conf.indexName).get.mappings(conf.docType))
+        settings.settings(conf.indexName)("index.number_of_shards").toInt shouldBe shards
+        settings.settings(conf.indexName)("index.number_of_replicas").toInt shouldBe replicas
+        realMapping should be(root.mappings.docType.properties.json.getOption(mappingSettingJson).get)
       }
     }
 
@@ -149,8 +150,8 @@ class ElasticWriterSpec extends ItSpec {
   }
 
   def esMappingToJson(value: AnyRef): Json = value match {
-    case map: java.util.LinkedHashMap[String, AnyRef] =>
-      Encoder.encodeJsonObject(JsonObject.fromIterable(map.asScala.mapValues(esMappingToJson)))
+    case map: Map[String, AnyRef] =>
+      Encoder.encodeJsonObject(JsonObject.fromIterable(map.mapValues(esMappingToJson)))
     case str: String =>
       Encoder.encodeString(str)
   }

@@ -1,7 +1,7 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config
 
-import com.sksamuel.elastic4s.TcpClient
-import org.elasticsearch.common.settings.Settings
+import com.sksamuel.elastic4s.ElasticsearchClientUri
+import com.sksamuel.elastic4s.http.HttpClient
 import org.joda.time.DateTime
 
 import scala.concurrent.duration.{FiniteDuration, _}
@@ -21,10 +21,12 @@ case class ElasticWriteConfig(
   sniffCluster: Boolean = false
 ) {
   val indexName = indexPrefix + "_" + new DateTime().toString("yyyy-MM-dd't'HH:mm:ss")
-  private def settings =
-    Settings.builder().put("cluster.name", cluster).put("client.transport.sniff", sniffCluster).build()
-  lazy val client: TcpClient = TcpClient.transport(settings, "elasticsearch://" + hosts
-    .map(host => s"$host:$port").mkString(","))
+  private val uri = ElasticsearchClientUri(
+    "elasticsearch",
+    hosts.map(host => (host,port)),
+    Map("cluster.name" -> cluster, "client.transport.sniff" -> sniffCluster.toString))
+
+  lazy val client: HttpClient = HttpClient(uri)
 }
 
 object ElasticWriteConfig {

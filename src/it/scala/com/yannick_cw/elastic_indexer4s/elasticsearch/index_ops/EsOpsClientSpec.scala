@@ -16,7 +16,7 @@ class EsOpsClientSpec extends ItSpec {
     complete(test()) lastly Indexes.All.values.foreach(deleteIndex)
   }
 
-  val opsClient = EsOpsClient(client)
+  val opsClient = EsOpsClient(http)
 
   "The EsOpsClient" should {
     "be able to delete indices" in {
