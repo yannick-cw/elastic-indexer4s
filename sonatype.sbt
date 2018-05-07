@@ -4,7 +4,9 @@ publishMavenStyle := true
 
 publishArtifact in Test := false
 
-pomIncludeRepository := { _ => false }
+pomIncludeRepository := { _ =>
+  false
+}
 
 pomExtra in Global := {
   <url>https://github.com/yannick-cw/elastic-indexer4s</url>

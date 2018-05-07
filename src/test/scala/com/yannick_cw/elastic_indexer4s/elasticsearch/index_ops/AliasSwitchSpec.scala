@@ -7,11 +7,15 @@ import scala.concurrent.Future
 
 class AliasSwitchSpec extends AsyncSpec {
 
-  val newIndex = "index"
+  val newIndex      = "index"
   val oldIndexAlias = "alias"
-  val oldIndexName = "oldIndex"
+  val oldIndexName  = "oldIndex"
 
-  def switchAlias(oldSize: Int, newSize: Int, failForNew: Boolean, expectSwitchFrom: String, oldIndicesWithAlias: IndexWithInfo*) =
+  def switchAlias(oldSize: Int,
+                  newSize: Int,
+                  failForNew: Boolean,
+                  expectSwitchFrom: String,
+                  oldIndicesWithAlias: IndexWithInfo*) =
     AliasSwitching(
       esClient = testEsOpsClient(oldSize, newSize, failForNew, expectSwitchFrom, oldIndicesWithAlias),
       minThreshold = 0.95,
@@ -27,15 +31,19 @@ class AliasSwitchSpec extends AsyncSpec {
     }
 
     "switch the alias if the threshold was not exceeded" in {
-      switchAlias(10, 10, false, oldIndexName, IndexWithInfo(oldIndexName, List(oldIndexAlias), 1)).switchAlias(oldIndexAlias, newIndex).map { switchResult =>
-        switchResult.right.value shouldBe an[AliasSwitched]
-      }
+      switchAlias(10, 10, false, oldIndexName, IndexWithInfo(oldIndexName, List(oldIndexAlias), 1))
+        .switchAlias(oldIndexAlias, newIndex)
+        .map { switchResult =>
+          switchResult.right.value shouldBe an[AliasSwitched]
+        }
     }
 
     "not switch the alias if threshold was exceeded" in {
-      switchAlias(5, 10, false, "noSwitch", IndexWithInfo(oldIndexName, List(oldIndexAlias), 1)).switchAlias(oldIndexAlias, newIndex).map { switchResult =>
-        switchResult.left.value shouldBe an[IndexError]
-      }
+      switchAlias(5, 10, false, "noSwitch", IndexWithInfo(oldIndexName, List(oldIndexAlias), 1))
+        .switchAlias(oldIndexAlias, newIndex)
+        .map { switchResult =>
+          switchResult.left.value shouldBe an[IndexError]
+        }
     }
 
     "not switch if the new size could not be queried" in {
@@ -59,10 +67,14 @@ class AliasSwitchSpec extends AsyncSpec {
 
   }
 
-  def testEsOpsClient(oldSize: Int, newSize: Int, failForNew: Boolean, expectSwitchFrom: String, oldIndicesWithAlias: Seq[IndexWithInfo]) =
+  def testEsOpsClient(oldSize: Int,
+                      newSize: Int,
+                      failForNew: Boolean,
+                      expectSwitchFrom: String,
+                      oldIndicesWithAlias: Seq[IndexWithInfo]) =
     new EsOpsClientApi {
-      def delete(index: String): Future[_] = Future.successful(())
-      def allIndicesWithAliasInfo: Future[List[IndexWithInfo]] = Future.successful(oldIndicesWithAlias.toList)
+      def delete(index: String): Future[_]                         = Future.successful(())
+      def allIndicesWithAliasInfo: Future[List[IndexWithInfo]]     = Future.successful(oldIndicesWithAlias.toList)
       def addAliasToIndex(index: String, alias: String): Future[_] = Future.successful(Unit)
       def sizeFor(index: String): Future[Long] = index match {
         case "oldIndex" => Future.successful(oldSize)

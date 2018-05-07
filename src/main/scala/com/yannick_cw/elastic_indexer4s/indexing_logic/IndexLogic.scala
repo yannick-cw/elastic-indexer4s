@@ -10,13 +10,13 @@ import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, RunResult, St
 object IndexLogic {
   sealed trait IndexAction[A]
   type FreeIndexAction[A] = Free[IndexAction, A]
-  type StageResult = Either[IndexError, StageSucceeded]
-  type StageAction[A] = EitherT[FreeIndexAction, IndexError, A]
+  type StageResult        = Either[IndexError, StageSucceeded]
+  type StageAction[A]     = EitherT[FreeIndexAction, IndexError, A]
 
-  case object CreateIndex extends IndexAction[StageResult]
-  case class IndexSource[A](source: Source[A, NotUsed]) extends IndexAction[StageResult]
+  case object CreateIndex                                           extends IndexAction[StageResult]
+  case class IndexSource[A](source: Source[A, NotUsed])             extends IndexAction[StageResult]
   case class SwitchAlias(minT: Double, maxT: Double, alias: String) extends IndexAction[StageResult]
-  case class DeleteOldIndices(keep: Int, aliasProtection: Boolean) extends IndexAction[StageResult]
+  case class DeleteOldIndices(keep: Int, aliasProtection: Boolean)  extends IndexAction[StageResult]
 
   // lifts the Algebra into a free context and than into EitherT for easier operations
   private def createIndex: StageAction[StageSucceeded] = EitherT(liftF(CreateIndex): FreeIndexAction[StageResult])
@@ -27,11 +27,12 @@ object IndexLogic {
   private def deleteOldIndices(keep: Int, aliasProtection: Boolean): StageAction[StageSucceeded] =
     EitherT(liftF(DeleteOldIndices(keep, aliasProtection)): FreeIndexAction[StageResult])
 
-  private def addRunStep(actionDone: StageAction[RunResult], nextStep: StageAction[StageSucceeded]) = for {
-    indexResult <- actionDone
-    success <- nextStep
-      .leftMap(_.copy(succeededStages = indexResult.succeededStages.toList))
-  } yield RunResult(indexResult.succeededStages :+ success: _*)
+  private def addRunStep(actionDone: StageAction[RunResult], nextStep: StageAction[StageSucceeded]) =
+    for {
+      indexResult <- actionDone
+      success <- nextStep
+        .leftMap(_.copy(succeededStages = indexResult.succeededStages.toList))
+    } yield RunResult(indexResult.succeededStages :+ success: _*)
 
   def write[A](source: Source[A, NotUsed]): StageAction[RunResult] =
     addRunStep(createIndex.map(RunResult(_)), indexSource(source))

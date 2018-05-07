@@ -6,8 +6,7 @@ import cats.{Monad, ~>}
 import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, RunResult}
 import com.yannick_cw.elastic_indexer4s.indexing_logic.IndexLogic._
 
-class IndexableStream[A, M[_]](source: Source[A, NotUsed], interpreter: (IndexAction ~> M))
-  (implicit M: Monad[M]) {
+class IndexableStream[A, M[_]](source: Source[A, NotUsed], interpreter: (IndexAction ~> M))(implicit M: Monad[M]) {
 
   private val writeStep = write(source)
 
@@ -21,12 +20,11 @@ class IndexableStream[A, M[_]](source: Source[A, NotUsed], interpreter: (IndexAc
     new IndexableStreamWithDeletion(writeStep, keep, aliasProtection, interpreter)
 }
 
-class IndexableStreamWithSwitching[A, M[_]](
-  done: StageAction[RunResult],
-  minT: Double,
-  maxT: Double,
-  alias: String,
-  interpreter: (IndexAction ~> M))(implicit M: Monad[M]) {
+class IndexableStreamWithSwitching[A, M[_]](done: StageAction[RunResult],
+                                            minT: Double,
+                                            maxT: Double,
+                                            alias: String,
+                                            interpreter: (IndexAction ~> M))(implicit M: Monad[M]) {
 
   private val switchStep = addSwitch(done, minT, maxT, alias)
 
@@ -37,13 +35,11 @@ class IndexableStreamWithSwitching[A, M[_]](
     new IndexableStreamWithDeletion(switchStep, keep, aliasProtection, interpreter)
 }
 
-class IndexableStreamWithDeletion[A, M[_]](
-  done: StageAction[RunResult],
-  keep: Int,
-  aliasProtection: Boolean,
-  interpreter: (IndexAction ~> M))(implicit M: Monad[M]) {
+class IndexableStreamWithDeletion[A, M[_]](done: StageAction[RunResult],
+                                           keep: Int,
+                                           aliasProtection: Boolean,
+                                           interpreter: (IndexAction ~> M))(implicit M: Monad[M]) {
 
   def run: M[Either[IndexError, RunResult]] =
     addDelete(done, keep, aliasProtection).value.foldMap(interpreter)
 }
-

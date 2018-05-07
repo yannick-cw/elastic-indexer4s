@@ -1,13 +1,16 @@
 import Dependencies._
 
-lazy val root = (project in file(".")).
-  settings(
-    inThisBuild(List(
-      scalaVersion := "2.12.4",
-      version      := "0.5.0",
-      organization := "io.github.yannick-cw",
-      fork in run := true
-    )),
+lazy val root = (project in file("."))
+  .settings(
+    inThisBuild(
+      List(
+        scalaVersion := "2.12.4",
+        version := "0.5.0",
+        organization := "io.github.yannick-cw",
+        fork in run := true,
+        scalafmtVersion := "1.2.0",
+        scalafmtOnCompile := true
+      )),
     name := "elastic_indexer4s",
     libraryDependencies ++= Seq(
       scalaTest,

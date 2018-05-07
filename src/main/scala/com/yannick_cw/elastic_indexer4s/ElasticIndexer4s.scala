@@ -41,8 +41,7 @@ class ElasticIndexer4s(esConf: ElasticWriteConfig)(implicit system: ActorSystem,
       catsStdInstancesForFuture(ex))
 
   def withDecider(decider: Decider): ElasticIndexer4s = {
-    val materializer = ActorMaterializer(
-      ActorMaterializerSettings(system).withSupervisionStrategy(decider))
+    val materializer = ActorMaterializer(ActorMaterializerSettings(system).withSupervisionStrategy(decider))
     new ElasticIndexer4s(esConf)(system, materializer, ex)
   }
 }
@@ -55,8 +54,8 @@ object ElasticIndexer4s {
     new ElasticIndexer4s(esConf)(system, materializer, ex)
 
   def apply(esConf: ElasticWriteConfig): ElasticIndexer4s = {
-    implicit val system = ActorSystem()
-    implicit val ex = system.dispatcher
+    implicit val system       = ActorSystem()
+    implicit val ex           = system.dispatcher
     implicit val materializer = ActorMaterializer()
     new ElasticIndexer4s(esConf)
   }

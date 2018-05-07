@@ -1,7 +1,12 @@
 package com.yannick_cw.elastic_indexer4s.indexing_logic
 
 import akka.stream.scaladsl.Source
-import com.yannick_cw.elastic_indexer4s.indexing_logic.IndexLogic.{CreateIndex, DeleteOldIndices, IndexSource, SwitchAlias}
+import com.yannick_cw.elastic_indexer4s.indexing_logic.IndexLogic.{
+  CreateIndex,
+  DeleteOldIndices,
+  IndexSource,
+  SwitchAlias
+}
 import com.yannick_cw.elastic_indexer4s.specs.Spec
 
 class IndexableStreamSpec extends Spec {
@@ -10,8 +15,7 @@ class IndexableStreamSpec extends Spec {
     "execute write commands in the right order" in {
       val interpreter = new TestInterpreter[String]
 
-      new IndexableStream(Source.empty[String], interpreter)
-        .run shouldBe a[Right[_, _]]
+      new IndexableStream(Source.empty[String], interpreter).run shouldBe a[Right[_, _]]
 
       interpreter.bufferOfActions should have size 2
       interpreter.bufferOfActions.head shouldBe a[CreateIndex.type]

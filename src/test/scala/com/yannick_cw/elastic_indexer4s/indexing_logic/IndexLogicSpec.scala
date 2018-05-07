@@ -11,8 +11,7 @@ class IndexLogicSpec extends Spec {
     "be able to create writing commands, based on index creation and index writing" in {
 
       val interpreter = new TestInterpreter[String]
-      IndexLogic.write(Source.empty[String])
-          .value.foldMap(interpreter) shouldBe a[Right[_, _]]
+      IndexLogic.write(Source.empty[String]).value.foldMap(interpreter) shouldBe a[Right[_, _]]
 
       interpreter.bufferOfActions should have size 2
       interpreter.bufferOfActions.head shouldBe a[CreateIndex.type]
@@ -21,8 +20,10 @@ class IndexLogicSpec extends Spec {
 
     "be able to add a switch command to writing command" in {
       val interpreter = new TestInterpreter[String]
-      IndexLogic.addSwitch(IndexLogic.write(Source.empty[String]), 0.0, 0.0, "alias")
-        .value.foldMap(interpreter) shouldBe a[Right[_, _]]
+      IndexLogic
+        .addSwitch(IndexLogic.write(Source.empty[String]), 0.0, 0.0, "alias")
+        .value
+        .foldMap(interpreter) shouldBe a[Right[_, _]]
 
       interpreter.bufferOfActions should have size 3
       interpreter.bufferOfActions.head shouldBe a[CreateIndex.type]
@@ -32,8 +33,10 @@ class IndexLogicSpec extends Spec {
 
     "be able to add a delete command to writing command" in {
       val interpreter = new TestInterpreter[String]
-      IndexLogic.addDelete(IndexLogic.write(Source.empty[String]), 0, false)
-        .value.foldMap(interpreter) shouldBe a[Right[_, _]]
+      IndexLogic
+        .addDelete(IndexLogic.write(Source.empty[String]), 0, false)
+        .value
+        .foldMap(interpreter) shouldBe a[Right[_, _]]
 
       interpreter.bufferOfActions should have size 3
       interpreter.bufferOfActions.head shouldBe a[CreateIndex.type]
@@ -43,8 +46,8 @@ class IndexLogicSpec extends Spec {
 
     "if failing switching still collect successful create and write" in {
       val interpreter = new TestInterpreter[String]
-      val result = IndexLogic.addSwitch(IndexLogic.write(Source.empty[String]), 0.0, 0.0, "failAlias")
-        .value.foldMap(interpreter)
+      val result =
+        IndexLogic.addSwitch(IndexLogic.write(Source.empty[String]), 0.0, 0.0, "failAlias").value.foldMap(interpreter)
       result shouldBe a[Left[_, _]]
       result.left.value.succeededStages shouldBe List(
         StageSuccess("create"),

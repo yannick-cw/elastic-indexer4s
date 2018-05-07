@@ -13,8 +13,9 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class ElasticWriter[A](
-  esConf: ElasticWriteConfig)(implicit system: ActorSystem, requestBuilder: RequestBuilder[A], ex: ExecutionContext) {
+class ElasticWriter[A](esConf: ElasticWriteConfig)(implicit system: ActorSystem,
+                                                   requestBuilder: RequestBuilder[A],
+                                                   ex: ExecutionContext) {
 
   import esConf._
 
@@ -23,13 +24,17 @@ class ElasticWriter[A](
 
   private lazy val esSubscriber: BulkIndexingSubscriber[A] = client.subscriber[A](
     batchSize = writeBatchSize,
-    completionFn = { () => Try(elasticFinishPromise.success(())); () },
-    errorFn = { (t: Throwable) => Try(elasticFinishPromise.failure(t)); () },
+    completionFn = { () =>
+      Try(elasticFinishPromise.success(())); ()
+    },
+    errorFn = { (t: Throwable) =>
+      Try(elasticFinishPromise.failure(t)); ()
+    },
     listener = new ResponseListener[A] {
       override def onAck(resp: BulkResponseItem, original: A): Unit = ()
 
       override def onFailure(resp: BulkResponseItem, original: A): Unit =
-      //todo not yet sure if this could break too early
+        //todo not yet sure if this could break too early
         Try(elasticFinishPromise.failure(new Exception("Failed indexing with: " + resp.error)))
     },
     concurrentRequests = writeConcurrentRequest,
@@ -37,31 +42,42 @@ class ElasticWriter[A](
   )
 
   lazy val esSink: Sink[A, Future[Unit]] =
-    Sink.fromSubscriber(esSubscriber)
+    Sink
+      .fromSubscriber(esSubscriber)
       .mapMaterializedValue(_ => elasticFinishPromise.future)
 
-  private def tryIndexCreation: Try[Future[Either[IndexError, StageSucceeded]]] = Try(client.execute(
-    mappingSetting.fold(
-      typed => createIndex(indexName)
-        .mappings(typed.mappings)
-        .analysis(typed.analyzer)
-        .shards(typed.shards)
-        .replicas(typed.replicas),
-      unsafe => createIndex(indexName)
-        .source(unsafe.source.spaces2)
-    )
-  ).map(_.fold(_ => Left(IndexError("Index creation was not acknowledged")), _ => Right(StageSuccess(s"Index $indexName was created"))
-  )))
+  private def tryIndexCreation: Try[Future[Either[IndexError, StageSucceeded]]] =
+    Try(
+      client
+        .execute(
+          mappingSetting.fold(
+            typed =>
+              createIndex(indexName)
+                .mappings(typed.mappings)
+                .analysis(typed.analyzer)
+                .shards(typed.shards)
+                .replicas(typed.replicas),
+            unsafe =>
+              createIndex(indexName)
+                .source(unsafe.source.spaces2)
+          )
+        )
+        .map(_.fold(_ => Left(IndexError("Index creation was not acknowledged")),
+                    _ => Right(StageSuccess(s"Index $indexName was created")))))
 
-  def createNewIndex: Future[Either[IndexError, StageSucceeded]] = Future.fromTry(tryIndexCreation)
-    .flatten
-    .recover { case NonFatal(t) =>
-      Left(IndexError("Index creation failed.", Some(t)))
-    }
+  def createNewIndex: Future[Either[IndexError, StageSucceeded]] =
+    Future
+      .fromTry(tryIndexCreation)
+      .flatten
+      .recover {
+        case NonFatal(t) =>
+          Left(IndexError("Index creation failed.", Some(t)))
+      }
 }
 
 object ElasticWriter {
-  def apply[A](esConf: ElasticWriteConfig)
-    (implicit system: ActorSystem, requestBuilder: RequestBuilder[A], ex: ExecutionContext): ElasticWriter[A] =
+  def apply[A](esConf: ElasticWriteConfig)(implicit system: ActorSystem,
+                                           requestBuilder: RequestBuilder[A],
+                                           ex: ExecutionContext): ElasticWriter[A] =
     new ElasticWriter[A](esConf)
 }

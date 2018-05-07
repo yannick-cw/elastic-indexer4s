@@ -6,25 +6,20 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import cats.~>
 import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
-import com.yannick_cw.elastic_indexer4s.elasticsearch.index_ops.{
-  AliasSwitching,
-  EsOpsClient,
-  IndexDeletion
-}
+import com.yannick_cw.elastic_indexer4s.elasticsearch.index_ops.{AliasSwitching, EsOpsClient, IndexDeletion}
 import com.yannick_cw.elastic_indexer4s.indexing_logic.FullStream
 import com.yannick_cw.elastic_indexer4s.indexing_logic.IndexLogic._
 import com.sksamuel.elastic4s.streams.RequestBuilder
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ElasticseachInterpreter[Entity](esConf: ElasticWriteConfig)(
-    implicit ex: ExecutionContext,
-    system: ActorSystem,
-    materializer: ActorMaterializer,
-    requestBuilder: RequestBuilder[Entity])
+class ElasticseachInterpreter[Entity](esConf: ElasticWriteConfig)(implicit ex: ExecutionContext,
+                                                                  system: ActorSystem,
+                                                                  materializer: ActorMaterializer,
+                                                                  requestBuilder: RequestBuilder[Entity])
     extends (IndexAction ~> Future) {
 
-  private val writer = ElasticWriter[Entity](esConf)
+  private val writer      = ElasticWriter[Entity](esConf)
   private val esOpsClient = EsOpsClient(esConf.client)
 
   override def apply[A](fa: IndexAction[A]): Future[A] = fa match {

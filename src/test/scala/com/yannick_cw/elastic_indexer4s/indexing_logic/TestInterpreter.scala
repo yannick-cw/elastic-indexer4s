@@ -14,11 +14,11 @@ class TestInterpreter[Entity] extends (IndexAction ~> Id) {
   override def apply[A](fa: IndexAction[A]): Id[A] = {
     bufferOfActions += fa
     fa match {
-      case CreateIndex => Right(StageSuccess("create"))
+      case CreateIndex                                  => Right(StageSuccess("create"))
       case IndexSource(source: Source[Entity, NotUsed]) => Right(StageSuccess("index"))
-      case SwitchAlias(minT, maxT, "failAlias") => Left(IndexError("failed"))
-      case SwitchAlias(minT, maxT, alias) => Right(StageSuccess("switch"))
-      case DeleteOldIndices(keep, aliasProtection) => Right(StageSuccess("delete"))
+      case SwitchAlias(minT, maxT, "failAlias")         => Left(IndexError("failed"))
+      case SwitchAlias(minT, maxT, alias)               => Right(StageSuccess("switch"))
+      case DeleteOldIndices(keep, aliasProtection)      => Right(StageSuccess("delete"))
     }
   }
 }

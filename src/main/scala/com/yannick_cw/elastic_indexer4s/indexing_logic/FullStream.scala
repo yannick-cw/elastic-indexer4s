@@ -12,24 +12,28 @@ import scala.util.control.NonFatal
 
 object FullStream extends LazyLogging {
 
-  private def countAntLogSink[A](logPer: FiniteDuration): Sink[A, Future[Int]] = Flow[A]
-    .groupedWithin(Int.MaxValue, logPer)
-    .map(_.length)
-    .map { elementsPerTime =>
-      logger.info(s"Indexed $elementsPerTime elements last $logPer")
-      elementsPerTime
-    }.toMat(Sink.reduce[Int](_ + _))(Keep.right)
+  private def countAntLogSink[A](logPer: FiniteDuration): Sink[A, Future[Int]] =
+    Flow[A]
+      .groupedWithin(Int.MaxValue, logPer)
+      .map(_.length)
+      .map { elementsPerTime =>
+        logger.info(s"Indexed $elementsPerTime elements last $logPer")
+        elementsPerTime
+      }
+      .toMat(Sink.reduce[Int](_ + _))(Keep.right)
 
-  def run[A](source: Source[A, NotUsed], sink: Sink[A, Future[Unit]], logSpeedInterval: FiniteDuration)
-    (implicit materializer: ActorMaterializer, ex: ExecutionContext): Future[Either[IndexError, StageSucceeded]] =
+  def run[A](source: Source[A, NotUsed], sink: Sink[A, Future[Unit]], logSpeedInterval: FiniteDuration)(
+      implicit materializer: ActorMaterializer,
+      ex: ExecutionContext): Future[Either[IndexError, StageSucceeded]] =
     (for {
       count <- source
         .alsoToMat(countAntLogSink(logSpeedInterval))(Keep.right)
         .toMat(sink)(Keep.both)
-        .mapMaterializedValue{ case(fCount, fDone) => fDone.flatMap(_ => fCount) }
+        .mapMaterializedValue { case (fCount, fDone) => fDone.flatMap(_ => fCount) }
         .run()
     } yield Right(StageSuccess(s"Indexed $count documents successfully")))
-      .recover { case NonFatal(t) =>
-        Left(IndexError("Writing documents failed.", Some(t)))
+      .recover {
+        case NonFatal(t) =>
+          Left(IndexError("Writing documents failed.", Some(t)))
       }
 }

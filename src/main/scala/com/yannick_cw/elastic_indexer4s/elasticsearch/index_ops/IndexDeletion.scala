@@ -8,17 +8,21 @@ class IndexDeletion(esClient: EsOpsClientApi)(implicit ec: ExecutionContext) {
 
   import esClient._
 
-  def deleteOldest(indexPrefix: String, newIndex: String, keep: Int, protectAlias: Boolean): Future[Either[IndexError, StageSucceeded]] = for {
-    allIndices <- allIndicesWithAliasInfo
-    toDelete = allIndices
-      .filter(_.index.startsWith(indexPrefix))
-      .sortBy(_.creationTime)
-      .filterNot(_.index == newIndex)
-      .dropRight(keep)
-      .filter(info => if (protectAlias) info.aliases.isEmpty else true)
-      .map(_.index)
-    _ <- toDelete.traverse(delete)
-  } yield Right(StageSuccess(s"Deleted indices: ${toDelete.mkString("[", ",", "]")}"))
+  def deleteOldest(indexPrefix: String,
+                   newIndex: String,
+                   keep: Int,
+                   protectAlias: Boolean): Future[Either[IndexError, StageSucceeded]] =
+    for {
+      allIndices <- allIndicesWithAliasInfo
+      toDelete = allIndices
+        .filter(_.index.startsWith(indexPrefix))
+        .sortBy(_.creationTime)
+        .filterNot(_.index == newIndex)
+        .dropRight(keep)
+        .filter(info => if (protectAlias) info.aliases.isEmpty else true)
+        .map(_.index)
+      _ <- toDelete.traverse(delete)
+    } yield Right(StageSuccess(s"Deleted indices: ${toDelete.mkString("[", ",", "]")}"))
 }
 
 object IndexDeletion {
