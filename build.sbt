@@ -12,6 +12,7 @@ lazy val root = (project in file("."))
         scalafmtOnCompile := true
       )),
     name := "elastic_indexer4s",
+    publishTo := sonatypePublishTo.value,
     libraryDependencies ++= Seq(
       scalaTest,
       scalaCheck,

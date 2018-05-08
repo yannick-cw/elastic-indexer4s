@@ -28,7 +28,7 @@ To get started with SBT, simply add the following to your `build.sbt`
 file:
 
 ```scala
-libraryDependencies += "io.github.yannick-cw" % "elastic_indexer4s_2.12" % "0.2"
+libraryDependencies += "io.github.yannick-cw" % "elastic_indexer4s_2.12" % "0.5.0"
 ```
 
 First you need a Configuration:
@@ -39,7 +39,7 @@ import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.ElasticWrite
 // will create an index with test_index_<current_date>
 val config = ElasticWriteConfig(
     esTargetHosts = List("localhost"),
-    esTargetPort = 9300,
+    esTargetPort = 9200,
     esTargetCluster = "elasticsearch",
     esTargetIndexPrefix = "test_index",
     esTargetType = "documents"
@@ -150,4 +150,8 @@ ElasticIndexer4s(config)
     .withDecider(decider)  
     .from(dummySource)
 ```
+
+### Changelog
+
+* 0.5.0: switch to using elasticsearch 6.x.x version, using http client instead of tcp client
 
