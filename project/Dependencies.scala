@@ -6,9 +6,9 @@ object Dependencies {
   val catsVersion      = "1.1.0"
   val akkaVersion      = "2.5.12"
 
-  lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+  lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % "test,it"
 
-  lazy val scalaCheck = "org.scalacheck" % "scalacheck_2.12" % "1.14.0" % "test"
+  lazy val scalaCheck = "org.scalacheck" % "scalacheck_2.12" % "1.14.0" % "test,it"
 
   lazy val elastic4s = Seq(
     "com.sksamuel.elastic4s" %% "elastic4s-core",
