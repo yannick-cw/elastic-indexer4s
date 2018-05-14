@@ -27,7 +27,7 @@ class ElasticWriter[A](esConf: ElasticWriteConfig)(implicit system: ActorSystem,
     completionFn = { () =>
       Try(elasticFinishPromise.success(())); ()
     },
-    errorFn = { (t: Throwable) =>
+    errorFn = { t: Throwable =>
       Try(elasticFinishPromise.failure(t)); ()
     },
     listener = new ResponseListener[A] {
@@ -62,7 +62,7 @@ class ElasticWriter[A](esConf: ElasticWriteConfig)(implicit system: ActorSystem,
                 .source(unsafe.source.spaces2)
           )
         )
-        .map(_.fold(_ => Left(IndexError("Index creation was not acknowledged")),
+        .map(_.fold(fail => Left(IndexError(s"Index creation failed with error: ${fail.error}")),
                     _ => Right(StageSuccess(s"Index $indexName was created")))))
 
   def createNewIndex: Future[Either[IndexError, StageSucceeded]] =

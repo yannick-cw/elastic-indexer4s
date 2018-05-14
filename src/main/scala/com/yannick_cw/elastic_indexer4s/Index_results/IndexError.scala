@@ -22,5 +22,6 @@ case class IndexError(msg: String, cause: Option[Throwable] = None, succeededSta
        |${succeededStages.map(_.msg).mkString("\n")}
        |
        |But failed with: $msg
+       |${cause.fold("")(cause => s"Caused by: ${cause.getMessage}")}
     """.stripMargin
 }
