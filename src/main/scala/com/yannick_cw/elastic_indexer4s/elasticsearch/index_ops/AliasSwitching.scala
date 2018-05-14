@@ -1,10 +1,10 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch.index_ops
 
-import scala.concurrent.{ExecutionContext, Future}
+import cats.data.EitherT
 import cats.implicits._
 import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded}
 
-import scala.util.Right
+import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.util.control.NonFatal
 
 class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Long, minThreshold: Double, maxThreshold: Double)(
@@ -20,28 +20,28 @@ class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Long, minThreshol
       }
 
   private def trySwitching(alias: String, newIndexName: String): Future[Either[IndexError, StageSucceeded]] =
-    for {
-      _            <- Future(Thread.sleep(waitForElastic))
-      oldSize      <- latestIndexWithAliasSize(alias)
-      newSize      <- sizeFor(newIndexName)
-      optSwitchRes <- oldSize.traverse(size => switchAliasBetweenIndices(newSize / size.toDouble, alias, newIndexName))
+    (for {
+      _       <- EitherT.liftF[Future, IndexError, Unit](Future(blocking(Thread.sleep(waitForElastic))))
+      oldSize <- latestIndexWithAliasSize(alias)
+      newSize <- sizeFor(newIndexName)
+      optSwitchRes <- oldSize
+        .traverse(size => switchAliasBetweenIndices(newSize / size.toDouble, alias, newIndexName))
       switchRes <- optSwitchRes match {
         case None =>
           addAliasToIndex(newIndexName, alias)
-            .map(_ => Right(NewAliasCreated(s"Added alias $alias to index $newIndexName")))
-        case Some(x) => Future.successful(x)
+            .map(_ => NewAliasCreated(s"Added alias $alias to index $newIndexName"): StageSucceeded)
+        case Some(x) => EitherT.pure[Future, IndexError](x)
       }
-    } yield switchRes
+    } yield switchRes).value
 
   private def switchAliasBetweenIndices(percentage: Double,
                                         alias: String,
-                                        newIndexName: String): Future[Either[IndexError, StageSucceeded]] =
+                                        newIndexName: String): OpsResult[StageSucceeded] =
     if (checkThreshold(percentage))
       switchAliasToIndex(alias, newIndexName)
-        .map(_ => Right(AliasSwitched(s"Switched alias, new index size is ${(percentage * 100).toInt}% of old index")))
+        .map(_ => AliasSwitched(s"Switched alias, new index size is ${(percentage * 100).toInt}% of old index"))
     else
-      Future.successful(
-        Left(IndexError(s"Switching failed, new index size is ${(percentage * 100).toInt}% of old index")))
+      EitherT.leftT(IndexError(s"Switching failed, new index size is ${(percentage * 100).toInt}% of old index"))
 
   private def checkThreshold(percentage: Double): Boolean = minThreshold < percentage && percentage <= maxThreshold
 }

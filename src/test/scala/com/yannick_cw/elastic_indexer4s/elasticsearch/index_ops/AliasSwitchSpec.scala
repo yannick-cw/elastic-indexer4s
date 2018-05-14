@@ -1,5 +1,7 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch.index_ops
 
+import cats.data.EitherT
+import cats.implicits._
 import com.yannick_cw.elastic_indexer4s.Index_results.IndexError
 import com.yannick_cw.elastic_indexer4s.specs.AsyncSpec
 
@@ -71,20 +73,22 @@ class AliasSwitchSpec extends AsyncSpec {
                       newSize: Int,
                       failForNew: Boolean,
                       expectSwitchFrom: String,
-                      oldIndicesWithAlias: Seq[IndexWithInfo]) =
+                      oldIndicesWithAlias: Seq[IndexWithInfo]): EsOpsClientApi =
     new EsOpsClientApi {
-      def delete(index: String): Future[_]                         = Future.successful(())
-      def allIndicesWithAliasInfo: Future[List[IndexWithInfo]]     = Future.successful(oldIndicesWithAlias.toList)
-      def addAliasToIndex(index: String, alias: String): Future[_] = Future.successful(Unit)
-      def sizeFor(index: String): Future[Long] = index match {
-        case "oldIndex" => Future.successful(oldSize)
-        case "index" =>
-          if (failForNew) Future.failed(throw new IllegalArgumentException("fail"))
-          else Future.successful(newSize)
-      }
-      def removeAliasFromIndex(index: String, alias: String): Future[Unit] = {
+      def removeAliasFromIndex(index: String, alias: String): OpsResult[Boolean] = EitherT.pure[Future, IndexError] {
         index should be(expectSwitchFrom)
-        Future.successful(Unit)
+        true
       }
+      def addAliasToIndex(index: String, alias: String): OpsResult[Boolean] = EitherT.pure[Future, IndexError](true)
+      def sizeFor(index: String): OpsResult[Long] =
+        EitherT.pure[Future, IndexError](index match {
+          case "oldIndex" => oldSize.toLong
+          case "index" =>
+            if (failForNew) throw new IllegalArgumentException("fail")
+            else newSize.toLong
+        })
+      def delete(index: String): OpsResult[Boolean] = EitherT.pure[Future, IndexError](true)
+      def allIndicesWithAliasInfo: OpsResult[List[IndexWithInfo]] =
+        EitherT.pure[Future, IndexError](oldIndicesWithAlias.toList)
     }
 }

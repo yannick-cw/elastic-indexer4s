@@ -1,6 +1,8 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch.index_ops
 
-import com.yannick_cw.elastic_indexer4s.Index_results.StageSucceeded
+import cats.data.EitherT
+import cats.implicits._
+import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded}
 import com.yannick_cw.elastic_indexer4s.specs.AsyncSpec
 
 import scala.concurrent.Future
@@ -66,16 +68,19 @@ class IndexDeletionSpec extends AsyncSpec {
     }
   }
 
-  def testEsOpsClient(oldIndicesWithAlias: IndexWithInfo*) =
+  private def testEsOpsClient(oldIndicesWithAlias: IndexWithInfo*) =
     new EsOpsClientApi {
       val deletedIndices = scala.collection.mutable.Buffer.empty[String]
-      def delete(index: String): Future[_] = {
+
+      def removeAliasFromIndex(index: String, alias: String): OpsResult[Boolean] = ???
+      def addAliasToIndex(index: String, alias: String): OpsResult[Boolean]      = ???
+      def sizeFor(index: String): OpsResult[Long]                                = ???
+      def delete(index: String): OpsResult[Boolean] = {
         deletedIndices += index
-        Future.successful(())
+        EitherT.pure[Future, IndexError](true)
       }
-      def allIndicesWithAliasInfo: Future[List[IndexWithInfo]]             = Future.successful(oldIndicesWithAlias.toList)
-      def addAliasToIndex(index: String, alias: String): Future[_]         = ???
-      def sizeFor(index: String): Future[Long]                             = ???
-      def removeAliasFromIndex(index: String, alias: String): Future[Unit] = ???
+      def allIndicesWithAliasInfo: OpsResult[List[IndexWithInfo]] =
+        EitherT.pure[Future, IndexError](oldIndicesWithAlias.toList)
     }
+
 }

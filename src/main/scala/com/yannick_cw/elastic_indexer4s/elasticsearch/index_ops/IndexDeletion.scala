@@ -12,7 +12,7 @@ class IndexDeletion(esClient: EsOpsClientApi)(implicit ec: ExecutionContext) {
                    newIndex: String,
                    keep: Int,
                    protectAlias: Boolean): Future[Either[IndexError, StageSucceeded]] =
-    for {
+    (for {
       allIndices <- allIndicesWithAliasInfo
       toDelete = allIndices
         .filter(_.index.startsWith(indexPrefix))
@@ -22,7 +22,7 @@ class IndexDeletion(esClient: EsOpsClientApi)(implicit ec: ExecutionContext) {
         .filter(info => if (protectAlias) info.aliases.isEmpty else true)
         .map(_.index)
       _ <- toDelete.traverse(delete)
-    } yield Right(StageSuccess(s"Deleted indices: ${toDelete.mkString("[", ",", "]")}"))
+    } yield StageSuccess(s"Deleted indices: ${toDelete.mkString("[", ",", "]")}")).value
 }
 
 object IndexDeletion {

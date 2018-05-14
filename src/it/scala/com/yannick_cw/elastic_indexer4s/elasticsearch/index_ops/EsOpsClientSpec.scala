@@ -5,6 +5,8 @@ import com.yannick_cw.elastic_indexer4s.specs.ItSpec
 import com.sksamuel.elastic4s.Indexes
 import org.scalatest.FutureOutcome
 
+import scala.concurrent.Future
+
 class EsOpsClientSpec extends ItSpec {
 
   val indices = (1 to 10).map(i => s"index_$i")
@@ -17,6 +19,9 @@ class EsOpsClientSpec extends ItSpec {
   }
 
   val opsClient = EsOpsClient(http)
+
+  implicit def testOpsResult[A](res: opsClient.OpsResult[A]): Future[A] =
+    res.fold(err => fail(err.msg), identity)
 
   "The EsOpsClient" should {
     "be able to delete indices" in {
