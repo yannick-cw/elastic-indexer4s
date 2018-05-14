@@ -154,4 +154,5 @@ ElasticIndexer4s(config)
 ### Changelog
 
 * 0.5.0: switch to using elasticsearch 6.x.x version, using http client instead of tcp client
+* 0.5.1: greatly increase the detail level of failure reporting
 
