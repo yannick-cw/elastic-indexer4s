@@ -28,18 +28,18 @@ To get started with SBT, simply add the following to your `build.sbt`
 file:
 
 ```scala
-libraryDependencies += "io.github.yannick-cw" % "elastic_indexer4s_2.12" % "0.5.0"
+libraryDependencies += "io.github.yannick-cw" % "elastic_indexer4s_2.12" % "0.6.0"
 ```
 
 First you need a Configuration:
 ```scala
 import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
+import com.sksamuel.elastic4s.http.ElasticNodeEndpoint
 
 // basic configuration, without mapping, settings or analyzers
 // will create an index with test_index_<current_date>
 val config = ElasticWriteConfig(
-    esTargetHosts = List("localhost"),
-    esTargetPort = 9200,
+    esNodeEndpoints = List(ElasticNodeEndpoint("http", "localhost", 9200, None))
     esTargetCluster = "elasticsearch",
     esTargetIndexPrefix = "test_index",
     esTargetType = "documents"
@@ -84,8 +84,7 @@ The switching and deleting are optional.
 
 | config name             | meaning           |
 | ---------------------- | ----------------- |
-|`hosts: List[String]`  |        all elasticsearch nodes to connec to       |
-|`port: Int`  |      the port of the nodes open to tcp traffic, usually 9300         |
+|`elasticNodeEndpoints: List[ElasticNodeEndpoint]`  |        all elasticsearch nodes to connect to       |
 |`cluster: String`  |     the name of the elasticsearch cluster          |
 |`indexPrefix: String`  |    the prefix that will be used in the index name, a date will be added           |
 |`docType: String`  |      name for the type of documents to be writte to elasticsearch, will be used as elasticsearch `type`        |
@@ -155,4 +154,4 @@ ElasticIndexer4s(config)
 
 * 0.5.0: switch to using elasticsearch 6.x.x version, using http client instead of tcp client
 * 0.5.1: greatly increase the detail level of failure reporting
-
+* 0.6.0: breaking change moving to elastic4s `6.3.3`, dropping all integration tests, as they are not supported at this time anymore by elastic4s (only by spinning up a cluster yourself or embedded docker)

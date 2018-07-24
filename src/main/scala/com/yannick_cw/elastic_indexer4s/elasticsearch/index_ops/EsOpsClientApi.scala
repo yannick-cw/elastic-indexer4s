@@ -4,7 +4,7 @@ import cats.data.EitherT
 import cats.implicits._
 import com.sksamuel.elastic4s.http.ElasticDsl.{addAlias, removeAlias, search, _}
 import com.sksamuel.elastic4s.http.settings.IndexSettingsResponse
-import com.sksamuel.elastic4s.http.{HttpClient, RequestFailure, RequestSuccess}
+import com.sksamuel.elastic4s.http.{ElasticClient, Response}
 import com.yannick_cw.elastic_indexer4s.Index_results.IndexError
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -46,11 +46,14 @@ trait EsOpsClientApi {
     } yield rSuccess.map(_ && aSuccess)
 }
 
-class EsOpsClient(client: HttpClient) extends EsOpsClientApi {
+class EsOpsClient(client: ElasticClient) extends EsOpsClientApi {
 
-  implicit class WithEitherTResult[A](f: Future[Either[RequestFailure, RequestSuccess[A]]]) {
+  implicit class WithEitherTResult[A](f: Future[Response[A]]) {
     def opsResult: OpsResult[A] =
-      EitherT(f).leftMap(fail => IndexError(s"Index creation failed with error: ${fail.error}")).map(_.result)
+      EitherT(
+        f.map(response =>
+          response.fold[Either[IndexError, A]](
+            Left(IndexError(s"Index creation failed with error: ${response.error}")))(Right(_))))
     def opsResult[B](to: A => B): OpsResult[B] = opsResult.map(to)
   }
 
@@ -88,5 +91,5 @@ class EsOpsClient(client: HttpClient) extends EsOpsClientApi {
 }
 
 object EsOpsClient {
-  def apply(client: HttpClient): EsOpsClient = new EsOpsClient(client)
+  def apply(client: ElasticClient): EsOpsClient = new EsOpsClient(client)
 }

@@ -62,8 +62,10 @@ class ElasticWriter[A](esConf: ElasticWriteConfig)(implicit system: ActorSystem,
                 .source(unsafe.source.spaces2)
           )
         )
-        .map(_.fold(fail => Left(IndexError(s"Index creation failed with error: ${fail.error}")),
-                    _ => Right(StageSuccess(s"Index $indexName was created")))))
+        .map(response =>
+          response.fold[Either[IndexError, StageSucceeded]](
+            Left(IndexError(s"Index creation failed with error: ${response.error}")))(_ =>
+            Right(StageSuccess(s"Index $indexName was created")))))
 
   def createNewIndex: Future[Either[IndexError, StageSucceeded]] =
     Future

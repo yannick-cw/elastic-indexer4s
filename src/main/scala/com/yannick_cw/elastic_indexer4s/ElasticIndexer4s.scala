@@ -11,7 +11,7 @@ import cats.instances.future.catsStdInstancesForFuture
 import com.sksamuel.elastic4s.streams.RequestBuilder
 import com.yannick_cw.elastic_indexer4s.elasticsearch.ElasticseachInterpreter
 import com.yannick_cw.elastic_indexer4s.indexing_logic.IndexableStream
-import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.http.ElasticDsl._
 
 import scala.concurrent.{ExecutionContext, Future}
 
