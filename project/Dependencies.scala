@@ -16,8 +16,6 @@ object Dependencies {
     "com.sksamuel.elastic4s" %% "elastic4s-circe"
   ).map(_ % elastic4sVersion)
 
-  lazy val elastic4sTestkit = "com.sksamuel.elastic4s" %% "elastic4s-testkit" % elastic4sVersion
-
   lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
 
   lazy val cats = Seq("org.typelevel" %% "cats-core", "org.typelevel" %% "cats-free").map(_ % catsVersion)

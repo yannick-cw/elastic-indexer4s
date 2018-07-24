@@ -17,8 +17,5 @@ lazy val root = (project in file("."))
       scalaTest,
       scalaCheck,
       akkaStream,
-      elastic4sTestkit
     ) ++ circe ++ elastic4s ++ cats ++ log
   )
-  .configs(IntegrationTest)
-  .settings(Defaults.itSettings: _*)
