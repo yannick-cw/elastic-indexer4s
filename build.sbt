@@ -3,8 +3,8 @@ import Dependencies._
 lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
-      scalaVersion := "2.12.1",
-      version      := "0.4",
+      scalaVersion := "2.12.7",
+      version      := "0.4.1",
       organization := "io.github.yannick-cw",
       fork in run := true
     )),
@@ -15,7 +15,7 @@ lazy val root = (project in file(".")).
       akkaStream,
       cats,
       elastic4sTestkit
-    ) ++ circe ++ elastic4s ++ log
+    ) ++ circe ++ elastic4s ++ log ++ itLog,
   )
   .configs(IntegrationTest)
   .settings(Defaults.itSettings: _*)
