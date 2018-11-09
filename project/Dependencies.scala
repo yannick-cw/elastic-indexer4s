@@ -1,10 +1,10 @@
 import sbt._
 
 object Dependencies {
-  val elastic4sVersion = "6.3.3"
-  val circeVersion     = "0.9.3"
-  val catsVersion      = "1.1.0"
-  val akkaVersion      = "2.5.14"
+  val elastic4sVersion = "6.4.0"
+  val circeVersion     = "0.10.0"
+  val catsVersion      = "1.4.0"
+  val akkaVersion      = "2.5.18"
 
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 
@@ -29,7 +29,7 @@ object Dependencies {
   ).map(_ % circeVersion)
 
   lazy val log = Seq(
-    "ch.qos.logback"             % "logback-classic" % "1.1.7",
-    "com.typesafe.scala-logging" %% "scala-logging"  % "3.5.0"
+    "ch.qos.logback"             % "logback-classic" % "1.2.3",
+    "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.0"
   )
 }

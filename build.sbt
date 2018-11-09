@@ -4,8 +4,8 @@ lazy val root = (project in file("."))
   .settings(
     inThisBuild(
       List(
-        scalaVersion := "2.12.4",
-        version := "0.6.0",
+        scalaVersion := "2.12.7",
+        version := "0.6.1-SNAPSHOT",
         organization := "io.github.yannick-cw",
         fork in run := true,
         scalafmtVersion := "1.2.0",
