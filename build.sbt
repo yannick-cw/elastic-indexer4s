@@ -9,7 +9,9 @@ lazy val root = (project in file("."))
         organization := "io.github.yannick-cw",
         fork in run := true,
         scalafmtVersion := "1.2.0",
-        scalafmtOnCompile := true
+        scalafmtOnCompile := true,
+        autoCompilerPlugins := true,
+        addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
       )),
     name := "elastic_indexer4s",
     publishTo := sonatypePublishTo.value,

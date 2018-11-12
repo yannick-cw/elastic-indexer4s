@@ -13,16 +13,14 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class ElasticWriter[A](esConf: ElasticWriteConfig)(implicit system: ActorSystem,
-                                                   requestBuilder: RequestBuilder[A],
-                                                   ex: ExecutionContext) {
+class ElasticWriter(esConf: ElasticWriteConfig)(implicit system: ActorSystem, ex: ExecutionContext) {
 
   import esConf._
 
   //promise that is passed to the error and completion function of the elastic subscriber
   private val elasticFinishPromise: Promise[Unit] = Promise[Unit]()
 
-  private lazy val esSubscriber: BulkIndexingSubscriber[A] = client.subscriber[A](
+  private def esSubscriber[A: RequestBuilder]: BulkIndexingSubscriber[A] = client.subscriber[A](
     batchSize = writeBatchSize,
     completionFn = { () =>
       Try(elasticFinishPromise.success(())); ()
@@ -41,9 +39,9 @@ class ElasticWriter[A](esConf: ElasticWriteConfig)(implicit system: ActorSystem,
     maxAttempts = writeMaxAttempts
   )
 
-  lazy val esSink: Sink[A, Future[Unit]] =
+  def esSink[A: RequestBuilder]: Sink[A, Future[Unit]] =
     Sink
-      .fromSubscriber(esSubscriber)
+      .fromSubscriber(esSubscriber[A])
       .mapMaterializedValue(_ => elasticFinishPromise.future)
 
   private def tryIndexCreation: Try[Future[Either[IndexError, StageSucceeded]]] =
@@ -78,8 +76,6 @@ class ElasticWriter[A](esConf: ElasticWriteConfig)(implicit system: ActorSystem,
 }
 
 object ElasticWriter {
-  def apply[A](esConf: ElasticWriteConfig)(implicit system: ActorSystem,
-                                           requestBuilder: RequestBuilder[A],
-                                           ex: ExecutionContext): ElasticWriter[A] =
-    new ElasticWriter[A](esConf)
+  def apply(esConf: ElasticWriteConfig)(implicit system: ActorSystem, ex: ExecutionContext): ElasticWriter =
+    new ElasticWriter(esConf)
 }

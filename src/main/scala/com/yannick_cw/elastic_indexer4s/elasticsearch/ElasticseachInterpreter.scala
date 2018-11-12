@@ -4,37 +4,41 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
-import cats.~>
+import cats.data.EitherT
+import com.sksamuel.elastic4s.streams.RequestBuilder
+import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded}
 import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
 import com.yannick_cw.elastic_indexer4s.elasticsearch.index_ops.{AliasSwitching, EsOpsClient, IndexDeletion}
 import com.yannick_cw.elastic_indexer4s.indexing_logic.FullStream
-import com.yannick_cw.elastic_indexer4s.indexing_logic.IndexLogic._
-import com.sksamuel.elastic4s.streams.RequestBuilder
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ElasticseachInterpreter[Entity](esConf: ElasticWriteConfig)(implicit ex: ExecutionContext,
-                                                                  system: ActorSystem,
-                                                                  materializer: ActorMaterializer,
-                                                                  requestBuilder: RequestBuilder[Entity])
-    extends (IndexAction ~> Future) {
+trait EsAccess[F[_]] {
+  def createIndex(): EitherT[F, IndexError, StageSucceeded]
+  def indexSource[A: RequestBuilder](source: Source[A, NotUsed]): EitherT[F, IndexError, StageSucceeded]
+  def switchAlias(minT: Double, maxT: Double, alias: String): EitherT[F, IndexError, StageSucceeded]
+  def deleteOldIndices(keep: Int, aliasProtection: Boolean): EitherT[F, IndexError, StageSucceeded]
+}
 
-  private val writer      = ElasticWriter[Entity](esConf)
+class ElasticseachInterpreter(esConf: ElasticWriteConfig)(implicit ex: ExecutionContext,
+                                                          system: ActorSystem,
+                                                          materializer: ActorMaterializer)
+    extends EsAccess[Future] {
+
+  private val writer      = ElasticWriter(esConf)
   private val esOpsClient = EsOpsClient(esConf.client)
 
-  override def apply[A](fa: IndexAction[A]): Future[A] = fa match {
-    case CreateIndex =>
-      writer.createNewIndex
+  def createIndex(): EitherT[Future, IndexError, StageSucceeded] = EitherT(writer.createNewIndex)
 
-    case IndexSource(source: Source[Entity, NotUsed]) =>
-      FullStream.run(source, writer.esSink, esConf.logWriteSpeedEvery)
-
-    case SwitchAlias(minT, maxT, alias) =>
+  def indexSource[A: RequestBuilder](source: Source[A, NotUsed]): EitherT[Future, IndexError, StageSucceeded] =
+    EitherT(FullStream.run(source, writer.esSink, esConf.logWriteSpeedEvery))
+  def switchAlias(minT: Double, maxT: Double, alias: String): EitherT[Future, IndexError, StageSucceeded] =
+    EitherT(
       AliasSwitching(esOpsClient, minT, maxT, esConf.waitForElasticTimeout.toMillis)
-        .switchAlias(alias, esConf.indexName)
+        .switchAlias(alias, esConf.indexName))
 
-    case DeleteOldIndices(keep, aliasProtection) =>
+  def deleteOldIndices(keep: Int, aliasProtection: Boolean): EitherT[Future, IndexError, StageSucceeded] =
+    EitherT(
       IndexDeletion(esOpsClient)
-        .deleteOldest(esConf.indexPrefix, esConf.indexName, keep, aliasProtection)
-  }
+        .deleteOldest(esConf.indexPrefix, esConf.indexName, keep, aliasProtection))
 }
