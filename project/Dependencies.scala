@@ -19,7 +19,9 @@ object Dependencies {
 
   lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
 
-  lazy val cats = Seq("org.typelevel" %% "cats-core", "org.typelevel" %% "cats-free").map(_ % catsVersion)
+  lazy val cats = Seq(
+    "org.typelevel" %% "cats-core"
+  ).map(_ % catsVersion)
 
   lazy val circe = Seq(
     "io.circe" %% "circe-core",
