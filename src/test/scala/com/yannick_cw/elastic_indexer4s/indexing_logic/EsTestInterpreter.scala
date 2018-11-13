@@ -15,6 +15,7 @@ case object CreateIndex extends Command
 case object IndexIt     extends Command
 case object Switch      extends Command
 case object Delete      extends Command
+case object Shutdown    extends Command
 object TestMonad {
   type W[A] = Writer[List[Command], A]
   implicit val r: RequestBuilder[String] = (t: String) => ???

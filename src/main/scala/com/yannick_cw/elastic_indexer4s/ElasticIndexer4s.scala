@@ -29,7 +29,7 @@ class ElasticIndexer4s(esConf: ElasticWriteConfig)(implicit system: ActorSystem,
     implicit val esAccess: EsAccess[Future] = new ElasticseachInterpreter(esConf)
     implicit val indexOps: IndexOps[Future] = new IndexingWithEs[Future]()
 
-    new IndexableStream[Entity, Future](source)
+    new IndexableStream[Entity, Future](source, () => Future(esConf.client.close()))
   }
 
   /**
@@ -39,7 +39,7 @@ class ElasticIndexer4s(esConf: ElasticWriteConfig)(implicit system: ActorSystem,
   def fromBuilder[Entity: RequestBuilder](source: Source[Entity, NotUsed]): IndexableStream[Entity, Future] = {
     implicit val esAccess: EsAccess[Future] = new ElasticseachInterpreter(esConf)
     implicit val indexOps: IndexOps[Future] = new IndexingWithEs[Future]()
-    new IndexableStream[Entity, Future](source)
+    new IndexableStream[Entity, Future](source, () => Future(esConf.client.close()))
   }
 
   def withDecider(decider: Decider): ElasticIndexer4s = {
