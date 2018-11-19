@@ -25,7 +25,7 @@ class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Long, minThreshol
       oldSize <- latestIndexWithAliasSize(alias)
       newSize <- sizeFor(newIndexName)
       optSwitchRes <- oldSize
-        .traverse(size => switchAliasBetweenIndices(newSize / size.toDouble, alias, newIndexName))
+        .traverse(oldIndexSize => switchAliasBetweenIndices(oldIndexSize, newSize, alias, newIndexName))
       switchRes <- optSwitchRes match {
         case None =>
           addAliasToIndex(newIndexName, alias)
@@ -34,14 +34,20 @@ class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Long, minThreshol
       }
     } yield switchRes).value
 
-  private def switchAliasBetweenIndices(percentage: Double,
+  private def switchAliasBetweenIndices(oldSize: Long,
+                                        newSize: Long,
                                         alias: String,
-                                        newIndexName: String): OpsResult[StageSucceeded] =
+                                        newIndexName: String): OpsResult[StageSucceeded] = {
+    val percentage = newSize / oldSize.toDouble
     if (checkThreshold(percentage))
       switchAliasToIndex(alias, newIndexName)
         .map(_ => AliasSwitched(s"Switched alias, new index size is ${(percentage * 100).toInt}% of old index"))
     else
-      EitherT.leftT(IndexError(s"Switching failed, new index size is ${(percentage * 100).toInt}% of old index"))
+      EitherT.leftT(
+        IndexError(
+          s"Switching failed, new index size is ${(percentage * 100).toInt}% of old index,\n" +
+            s" $oldSize documents in old index with alias $alias, $newSize documents in new index $newIndexName"))
+  }
 
   private def checkThreshold(percentage: Double): Boolean = minThreshold < percentage && percentage <= maxThreshold
 }
