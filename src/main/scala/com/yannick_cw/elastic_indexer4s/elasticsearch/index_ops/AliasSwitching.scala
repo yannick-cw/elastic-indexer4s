@@ -46,7 +46,9 @@ class AliasSwitching(esClient: EsOpsClientApi, waitForElastic: Long, minThreshol
       EitherT.leftT(
         IndexError(
           s"Switching failed, new index size is ${(percentage * 100).toInt}% of old index,\n" +
-            s" $oldSize documents in old index with alias $alias, $newSize documents in new index $newIndexName"))
+            s" $oldSize documents in old index with alias $alias, $newSize documents in new index $newIndexName.\n\n" +
+            s"If you think the size of the new index is not correct, try to increase the `waitForElasticTimeout` property in the config." +
+            s"This run spent ${waitForElastic / 1000} seconds waiting"))
   }
 
   private def checkThreshold(percentage: Double): Boolean = minThreshold < percentage && percentage <= maxThreshold
