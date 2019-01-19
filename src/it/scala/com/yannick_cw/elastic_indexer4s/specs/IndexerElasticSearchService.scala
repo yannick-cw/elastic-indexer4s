@@ -1,21 +1,25 @@
-package com.yannick_cw.elastic_indexer4s
+package com.yannick_cw.elastic_indexer4s.specs
 
 import java.io.IOException
 import java.net.ServerSocket
 
+import com.sksamuel.elastic4s.http.{ElasticClient, ElasticProperties}
+import com.sksamuel.elastic4s.testkit.ClientProvider
 import com.whisk.docker.{DockerContainer, DockerKit, DockerPortMapping, DockerReadyChecker}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-trait IndexerElasticSearchService extends DockerKit {
+trait IndexerElasticSearchService extends DockerKit with ClientProvider {
   val DefaultElasticsearchHttpPort   = 9200
   val DefaultElasticsearchClientPort = 9300
   val ElasticsearchHttpPort          = getFreePort
   val ElasticsearchClientPort        = getFreePort
 
   override val StartContainersTimeout = 60.seconds
+
+  override def client: ElasticClient = ElasticClient(ElasticProperties(s"http://localhost:$ElasticsearchHttpPort"))
 
   val elasticsearchContainer: DockerContainer =
     DockerContainer("docker.elastic.co/elasticsearch/elasticsearch:6.4.0")

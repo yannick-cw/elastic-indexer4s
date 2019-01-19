@@ -2,6 +2,7 @@ import Dependencies._
 
 lazy val root = (project in file("."))
   .settings(
+    parallelExecution in IntegrationTest := false,
     inThisBuild(
       List(
         scalaVersion := "2.12.8",
@@ -11,7 +12,7 @@ lazy val root = (project in file("."))
         scalafmtVersion := "1.2.0",
         scalafmtOnCompile := true,
         autoCompilerPlugins := true,
-        addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
+        addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9")
       )),
     name := "elastic_indexer4s",
     Defaults.itSettings,
@@ -20,6 +21,7 @@ lazy val root = (project in file("."))
       scalaTest,
       scalaCheck,
       akkaStream,
+      elastic4sTestkit
     ) ++ circe ++ elastic4s ++ cats ++ log ++ itUtilDependencies
   )
   .configs(IntegrationTest)
