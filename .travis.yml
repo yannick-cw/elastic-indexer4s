@@ -1,9 +1,28 @@
+sudo: true
+services:
+- docker
+
+before_install:
+- docker pull docker.elastic.co/elasticsearch/elasticsearch:6.4.0
+
 language: scala
 
 scala:
-  - 2.12.1
+  - 2.12.8
 
-script: "sbt clean coverage test"
+script: "sbt clean coverage test it:test"
+
+cache:
+  directories:
+  - $HOME/.ivy2/cache
+  - $HOME/.sbt/boot/
+
+before_cache:
+# Tricks to avoid unnecessary cache updates
+- find $HOME/.ivy2 -name "ivydata-*.properties" -delete
+- find $HOME/.sbt -name "*.lock" -delete
+
 after_success: "sbt coverageReport coveralls"
+
 jdk:
   - oraclejdk8

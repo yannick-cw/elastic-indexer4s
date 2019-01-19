@@ -39,7 +39,7 @@ import com.sksamuel.elastic4s.http.ElasticNodeEndpoint
 // basic configuration, without mapping, settings or analyzers
 // will create an index with test_index_<current_date>
 val config = ElasticWriteConfig(
-    esNodeEndpoints = List(ElasticNodeEndpoint("http", "localhost", 9200, None))
+    esNodeEndpoints = List(ElasticNodeEndpoint("http", "localhost", 9200, None)),
     esTargetCluster = "elasticsearch",
     esTargetIndexPrefix = "test_index",
     esTargetType = "documents"

@@ -30,6 +30,11 @@ object Dependencies {
     "io.circe" %% "circe-optics"
   ).map(_ % circeVersion)
 
+  lazy val itUtilDependencies = Seq(
+    "com.whisk" %% "docker-testkit-scalatest"    % "0.9.5" % "it",
+    "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.8" % "it"
+  )
+
   lazy val log = Seq(
     "ch.qos.logback"             % "logback-classic" % "1.2.3",
     "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.0"
