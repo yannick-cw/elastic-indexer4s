@@ -1,13 +1,15 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config
 
-import com.sksamuel.elastic4s.http.{ElasticClient, ElasticNodeEndpoint, ElasticProperties}
+import com.sksamuel.elastic4s.http.{ElasticClient, ElasticNodeEndpoint}
+import org.apache.http.HttpHost
+import org.elasticsearch.client.RestClient
+import org.elasticsearch.client.sniff.Sniffer
 import org.joda.time.DateTime
 
 import scala.concurrent.duration.{FiniteDuration, _}
 
 case class ElasticWriteConfig(
     elasticNodeEndpoints: List[ElasticNodeEndpoint],
-    cluster: String,
     indexPrefix: String,
     docType: String,
     mappingSetting: MappingSetting = TypedMappingSetting(),
@@ -20,17 +22,25 @@ case class ElasticWriteConfig(
 ) {
   val indexName: String = indexPrefix + "_" + new DateTime().toString("yyyy-MM-dd't'HH:mm:ss")
 
-  lazy val client: ElasticClient = ElasticClient(
-    ElasticProperties(elasticNodeEndpoints,
-                      Map("cluster.name" -> cluster, "client.transport.sniff" -> sniffCluster.toString)))
+  lazy val restClient: RestClient =
+    RestClient
+      .builder(elasticNodeEndpoints.map(e => new HttpHost(e.host, e.port, "http")): _*)
+      .build()
+
+  lazy val client: ElasticClient = {
+    if (sniffCluster) {
+      // sniffs every 5 minutes for the best hosts to connect to
+      Sniffer.builder(restClient).build()
+    }
+    ElasticClient.fromRestClient(restClient)
+  }
 }
 
 object ElasticWriteConfig {
   def apply(
       esNodeEndpoints: List[ElasticNodeEndpoint],
-      esTargetCluster: String,
       esTargetIndexPrefix: String,
       esTargetType: String
   ): ElasticWriteConfig =
-    new ElasticWriteConfig(esNodeEndpoints, esTargetCluster, esTargetIndexPrefix, esTargetType)
+    new ElasticWriteConfig(esNodeEndpoints, esTargetIndexPrefix, esTargetType)
 }

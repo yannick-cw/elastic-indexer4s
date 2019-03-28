@@ -40,7 +40,6 @@ import com.sksamuel.elastic4s.http.ElasticNodeEndpoint
 // will create an index with test_index_<current_date>
 val config = ElasticWriteConfig(
     esNodeEndpoints = List(ElasticNodeEndpoint("http", "localhost", 9200, None)),
-    esTargetCluster = "elasticsearch",
     esTargetIndexPrefix = "test_index",
     esTargetType = "documents"
   )
@@ -85,7 +84,6 @@ The switching and deleting are optional.
 | config name             | meaning           |
 | ---------------------- | ----------------- |
 |`elasticNodeEndpoints: List[ElasticNodeEndpoint]`  |        all elasticsearch nodes to connect to       |
-|`cluster: String`  |     the name of the elasticsearch cluster          |
 |`indexPrefix: String`  |    the prefix that will be used in the index name, a date will be added           |
 |`docType: String`  |      name for the type of documents to be writte to elasticsearch, will be used as elasticsearch `type`        |
 |`mappingSetting: MappingSetting` |     all mappings and settings, see below for more details          |
@@ -94,7 +92,7 @@ The switching and deleting are optional.
 |`writeMaxAttempts: Int`  |     the retry attempts to write before failure, defaults to 5          |
 |`logWriteSpeedEvery: FiniteDuration` |    the time interval in which it is logged how many documents were written, defaults to a minute           |
 |`waitForElasticTimeout: FiniteDuratio` |    time to wait to count the documents before switching alias, default to 5 seconds           |
-|`sniffCluster` |    activate or deactivate [sniffing feature] (https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/transport-client.html#transport-client) for the client
+|`sniffCluster` |    activate or deactivate [sniffing feature] (https://www.elastic.co/guide/en/elasticsearch/client/java-rest/6.7/_usage.html) for the client
 
 
 The `MappingSetting` can be passed to specify mappings and settings for the index.
@@ -155,3 +153,4 @@ ElasticIndexer4s(config)
 * 0.5.0: switch to using elasticsearch 6.x.x version, using http client instead of tcp client
 * 0.5.1: greatly increase the detail level of failure reporting
 * 0.6.0: breaking change moving to elastic4s `6.3.3`, dropping all integration tests, as they are not supported at this time anymore by elastic4s (only by spinning up a cluster yourself or embedded docker)
+* 0.6.5: updates lots of versions and fixes cluster sniffing for the rest client, also removed the cluster from the settings, as it is not supported in the rest client

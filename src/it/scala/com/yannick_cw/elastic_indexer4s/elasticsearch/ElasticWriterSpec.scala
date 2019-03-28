@@ -146,7 +146,7 @@ class ElasticWriterSpec extends AsyncWordSpec with ItSpec {
 
     "fail with index creation, if no connection could be established" in {
       val notWorkingEs =
-        ElasticWriteConfig(List(ElasticNodeEndpoint("http", "host", 99, None)), "cluster", "prefix", "docsType")
+        ElasticWriteConfig(List(ElasticNodeEndpoint("http", "host", 99, None)),  "prefix", "docsType")
       implicit val builder = userRequestBuilder(notWorkingEs.indexName)
       val writer           = ElasticWriter(notWorkingEs)
       writer.createNewIndex

@@ -6,7 +6,7 @@ lazy val root = (project in file("."))
     inThisBuild(
       List(
         scalaVersion := "2.12.8",
-        version := "0.6.5-SNAPSHOT",
+        version := "0.6.6-SNAPSHOT",
         organization := "io.github.yannick-cw",
         fork in run := true,
         scalafmtVersion := "1.2.0",
@@ -22,6 +22,6 @@ lazy val root = (project in file("."))
       scalaCheck,
       akkaStream,
       elastic4sTestkit
-    ) ++ circe ++ elastic4s ++ cats ++ log ++ itUtilDependencies
+    ) ++ circe ++ elastic4s ++ cats ++ log ++ itUtilDependencies ++ elasticsearch
   )
   .configs(IntegrationTest)

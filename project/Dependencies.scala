@@ -1,10 +1,11 @@
 import sbt._
 
 object Dependencies {
-  val elastic4sVersion = "6.4.0"
-  val circeVersion     = "0.11.0"
-  val catsVersion      = "1.5.0"
-  val akkaVersion      = "2.5.19"
+  val elastic4sVersion     = "6.5.1"
+  val circeVersion         = "0.11.0"
+  val catsVersion          = "1.6.0"
+  val akkaVersion          = "2.5.21"
+  val elasticsearchVersion = "6.5.2"
 
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % "test,it"
 
@@ -16,6 +17,10 @@ object Dependencies {
     "com.sksamuel.elastic4s" %% "elastic4s-embedded",
     "com.sksamuel.elastic4s" %% "elastic4s-circe"
   ).map(_ % elastic4sVersion)
+
+  lazy val elasticsearch = Seq(
+    "org.elasticsearch.client" % "elasticsearch-rest-client-sniffer" % elasticsearchVersion
+  )
 
   lazy val elastic4sTestkit = "com.sksamuel.elastic4s" %% "elastic4s-testkit" % elastic4sVersion % "it"
 

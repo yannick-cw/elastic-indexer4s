@@ -82,7 +82,6 @@ object TestObjects {
   )(implicit c: ElasticClient): ElasticWriteConfig =
     new ElasticWriteConfig(
       elasticNodeEndpoints = List(ElasticNodeEndpoint("http", "host", 0, None)),
-      cluster = "cluster",
       indexPrefix = "test_index",
       docType = "docType",
       mappingSetting = mappingSetting,
