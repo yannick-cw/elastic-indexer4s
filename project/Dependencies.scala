@@ -7,7 +7,7 @@ object Dependencies {
   val akkaVersion          = "2.5.21"
   val elasticsearchVersion = "6.5.2"
 
-  lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % "test,it"
+  lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.7" % "test,it"
 
   lazy val scalaCheck = "org.scalacheck" % "scalacheck_2.12" % "1.14.0" % "test,it"
 
