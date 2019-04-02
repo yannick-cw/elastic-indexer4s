@@ -5,7 +5,7 @@ object Dependencies {
   val circeVersion         = "0.11.0"
   val catsVersion          = "1.6.0"
   val akkaVersion          = "2.5.21"
-  val elasticsearchVersion = "6.5.4"
+  val elasticsearchVersion = "6.7.0"
 
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.7" % "test,it"
 
