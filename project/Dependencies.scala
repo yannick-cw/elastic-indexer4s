@@ -1,7 +1,7 @@
 import sbt._
 
 object Dependencies {
-  val elastic4sVersion     = "6.5.1"
+  val elastic4sVersion     = "7.0.0"
   val circeVersion         = "0.11.0"
   val catsVersion          = "1.6.0"
   val akkaVersion          = "2.5.22"
