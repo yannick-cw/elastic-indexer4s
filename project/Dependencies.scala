@@ -1,13 +1,13 @@
 import sbt._
 
 object Dependencies {
-  val elastic4sVersion     = "6.5.1"
+  val elastic4sVersion     = "6.5.3"
   val circeVersion         = "0.11.0"
-  val catsVersion          = "1.6.0"
-  val akkaVersion          = "2.5.22"
-  val elasticsearchVersion = "6.7.2"
+  val catsVersion          = "1.6.1"
+  val akkaVersion          = "2.5.24"
+  val elasticsearchVersion = "6.7.1"
 
-  lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.7" % "test,it"
+  lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.8" % "test,it"
 
   lazy val scalaCheck = "org.scalacheck" % "scalacheck_2.12" % "1.14.0" % "test,it"
 
@@ -38,8 +38,8 @@ object Dependencies {
   ).map(_ % circeVersion)
 
   lazy val itUtilDependencies = Seq(
-    "com.whisk" %% "docker-testkit-scalatest"    % "0.9.8" % "it",
-    "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.8" % "it"
+    "com.whisk" %% "docker-testkit-scalatest"    % "0.9.9" % "it",
+    "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "it"
   )
 
   lazy val log = Seq(
