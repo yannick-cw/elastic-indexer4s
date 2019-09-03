@@ -12,7 +12,7 @@ lazy val root = (project in file("."))
         scalafmtVersion := "1.2.0",
         scalafmtOnCompile := true,
         autoCompilerPlugins := true,
-        addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
+        addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.0")
       )),
     name := "elastic_indexer4s",
     Defaults.itSettings,
