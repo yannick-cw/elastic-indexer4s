@@ -1,15 +1,15 @@
 import sbt._
 
 object Dependencies {
-  val elastic4sVersion     = "6.7.2"
-  val circeVersion         = "0.11.0"
-  val catsVersion          = "1.6.1"
-  val akkaVersion          = "2.5.24"
-  val elasticsearchVersion = "6.7.2"
+  val elastic4sVersion     = "6.7.3"
+  val circeVersion         = "0.12.3"
+  val catsVersion          = "2.0.0"
+  val akkaVersion          = "2.5.26"
+  val elasticsearchVersion = "6.8.4"
 
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.8" % "test,it"
 
-  lazy val scalaCheck = "org.scalacheck" % "scalacheck_2.12" % "1.14.0" % "test,it"
+  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.14.0" % "test,it"
 
   lazy val elastic4s = Seq(
     "com.sksamuel.elastic4s" %% "elastic4s-core",
@@ -33,9 +33,8 @@ object Dependencies {
   lazy val circe = Seq(
     "io.circe" %% "circe-core",
     "io.circe" %% "circe-generic",
-    "io.circe" %% "circe-parser",
-    "io.circe" %% "circe-optics"
-  ).map(_ % circeVersion)
+    "io.circe" %% "circe-parser"
+  ).map(_ % circeVersion) ++ Seq("io.circe" %% "circe-optics" % "0.12.0")
 
   lazy val itUtilDependencies = Seq(
     "com.whisk" %% "docker-testkit-scalatest"    % "0.9.9" % "it",
