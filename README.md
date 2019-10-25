@@ -22,13 +22,13 @@ The only thing you have to provide are some settings, an `akka.stream.scaladsl.S
 
 ### Getting Started
 
-ElasticIndexer4s is currently available for Scala 2.12, if you need it for scala 2.11 open an issue.
+ElasticIndexer4s is currently available for Scala 2.13 and 2.12.
 
 To get started with SBT, simply add the following to your `build.sbt`
 file:
 
 ```scala
-libraryDependencies += "io.github.yannick-cw" % "elastic_indexer4s_2.12" % "0.6.4"
+libraryDependencies += "io.github.yannick-cw" %% "elastic_indexer4s" % "0.6.4"
 ```
 
 First you need a Configuration:

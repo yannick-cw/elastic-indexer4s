@@ -9,6 +9,7 @@ import com.yannick_cw.elastic_indexer4s.specs.AsyncSpec
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 class FullStreamSpec extends AsyncSpec {
   implicit val system       = ActorSystem()

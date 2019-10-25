@@ -5,14 +5,15 @@ lazy val root = (project in file("."))
     parallelExecution in IntegrationTest := false,
     inThisBuild(
       List(
-        scalaVersion := "2.12.8",
+        scalaVersion := "2.13.1",
+        crossScalaVersions := Seq("2.13.1", "2.12.10"),
         version := "0.6.6-SNAPSHOT",
         organization := "io.github.yannick-cw",
         fork in run := true,
         scalafmtVersion := "1.2.0",
         scalafmtOnCompile := true,
         autoCompilerPlugins := true,
-        addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10")
+        addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
       )),
     name := "elastic_indexer4s",
     Defaults.itSettings,

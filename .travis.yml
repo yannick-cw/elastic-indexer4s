@@ -8,7 +8,7 @@ before_install:
 language: scala
 
 scala:
-  - 2.12.8
+  - 2.13.1
 
 script: "sbt clean coverage test it:test"
 
@@ -25,4 +25,4 @@ before_cache:
 after_success: "sbt coverageReport coveralls"
 
 jdk:
-  - oraclejdk8
+  - oraclejdk11
