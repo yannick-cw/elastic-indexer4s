@@ -4,7 +4,7 @@ object Dependencies {
   val elastic4sVersion     = "6.7.2"
   val circeVersion         = "0.11.0"
   val catsVersion          = "1.6.1"
-  val akkaVersion          = "2.5.24"
+  val akkaVersion          = "2.5.27"
   val elasticsearchVersion = "6.7.2"
 
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.8" % "test,it"
