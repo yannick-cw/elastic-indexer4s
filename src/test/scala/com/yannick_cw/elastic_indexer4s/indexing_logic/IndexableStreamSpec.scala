@@ -3,7 +3,6 @@ package com.yannick_cw.elastic_indexer4s.indexing_logic
 import akka.stream.scaladsl.Source
 import cats.data.Writer
 import cats.data.WriterT._
-import cats.instances.list.catsKernelStdMonoidForList
 import com.yannick_cw.elastic_indexer4s.indexing_logic.TestMonad.{W, r}
 import com.yannick_cw.elastic_indexer4s.specs.Spec
 
