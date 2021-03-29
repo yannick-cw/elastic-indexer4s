@@ -3,7 +3,6 @@ package com.yannick_cw.elastic_indexer4s.indexing_logic
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import cats.data.WriterT._
-import cats.instances.list.catsKernelStdMonoidForList
 import cats.data.{EitherT, Writer}
 import com.sksamuel.elastic4s.streams.RequestBuilder
 import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, RunResult, StageSucceeded, StageSuccess}
