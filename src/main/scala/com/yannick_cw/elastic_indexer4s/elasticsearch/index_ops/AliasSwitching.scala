@@ -1,7 +1,7 @@
 package com.yannick_cw.elastic_indexer4s.elasticsearch.index_ops
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.syntax.all._
 import com.yannick_cw.elastic_indexer4s.Index_results.{IndexError, StageSucceeded}
 
 import scala.concurrent.{ExecutionContext, Future, blocking}

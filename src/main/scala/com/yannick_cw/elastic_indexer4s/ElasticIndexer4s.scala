@@ -7,7 +7,6 @@ import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import com.yannick_cw.elastic_indexer4s.elasticsearch.elasic_config.ElasticWriteConfig
 import com.sksamuel.elastic4s.Indexable
-import cats.instances.future.catsStdInstancesForFuture
 import com.sksamuel.elastic4s.streams.RequestBuilder
 import com.yannick_cw.elastic_indexer4s.elasticsearch.{ElasticseachInterpreter, EsAccess}
 import com.yannick_cw.elastic_indexer4s.indexing_logic.{IndexOps, IndexableStream, IndexingWithEs}
