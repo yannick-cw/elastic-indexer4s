@@ -5,7 +5,7 @@ lazy val root = (project in file("."))
     parallelExecution in IntegrationTest := false,
     inThisBuild(
       List(
-        scalaVersion := "2.12.8",
+        scalaVersion := "2.12.15",
         version := "0.6.6-SNAPSHOT",
         organization := "io.github.yannick-cw",
         fork in run := true,
