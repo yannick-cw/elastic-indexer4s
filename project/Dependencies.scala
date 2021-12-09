@@ -38,7 +38,7 @@ object Dependencies {
   ).map(_ % circeVersion)
 
   lazy val itUtilDependencies = Seq(
-    "com.whisk" %% "docker-testkit-scalatest"    % "0.9.9" % "it",
+    "com.whisk" %% "docker-testkit-scalatest"    % "0.11.0" % "it",
     "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "it"
   )
 
