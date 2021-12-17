@@ -43,7 +43,7 @@ object Dependencies {
   )
 
   lazy val log = Seq(
-    "ch.qos.logback"             % "logback-classic" % "1.2.3",
+    "ch.qos.logback"             % "logback-classic" % "1.2.9",
     "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.2"
   )
 }
