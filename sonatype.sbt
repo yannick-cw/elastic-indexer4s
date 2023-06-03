@@ -2,13 +2,13 @@ sonatypeProfileName := "io.github.yannick-cw"
 
 publishMavenStyle := true
 
-publishArtifact in Test := false
+(Test / publishArtifact) := false
 
 pomIncludeRepository := { _ =>
   false
 }
 
-pomExtra in Global := {
+(Global / pomExtra) := {
   <url>https://github.com/yannick-cw/elastic-indexer4s</url>
     <licenses>
       <license>
