@@ -2,13 +2,13 @@ import Dependencies._
 
 lazy val root = (project in file("."))
   .settings(
-    parallelExecution in IntegrationTest := false,
+    (IntegrationTest / parallelExecution) := false,
     inThisBuild(
       List(
         scalaVersion := "2.12.8",
         version := "0.6.6-SNAPSHOT",
         organization := "io.github.yannick-cw",
-        fork in run := true,
+        (run / fork) := true,
         scalafmtVersion := "1.2.0",
         scalafmtOnCompile := true,
         autoCompilerPlugins := true,
